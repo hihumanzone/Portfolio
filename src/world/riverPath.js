@@ -55,6 +55,23 @@ export function getRiverWidth(t) {
 // Precomputed segment points for fast 2D distance and height queries
 const SEG_COUNT = RIVER_3D_POINTS.length - 1;
 
+// Per-segment AABB + max reach (half width + bank) for cheap early rejection.
+// Identical results: rejected segments can never be the nearest within range.
+const _segBounds = [];
+for (let i = 6; i < SEG_COUNT; i++) {
+  const p1 = RIVER_3D_POINTS[i];
+  const p2 = RIVER_3D_POINTS[i + 1];
+  const tMid = (i + 0.5) / SEG_COUNT;
+  const reach = getRiverWidth(tMid) * 0.5 + 4.5;
+  _segBounds.push({
+    i,
+    minX: Math.min(p1.x, p2.x) - reach,
+    maxX: Math.max(p1.x, p2.x) + reach,
+    minZ: Math.min(p1.z, p2.z) - reach,
+    maxZ: Math.max(p1.z, p2.z) + reach,
+  });
+}
+
 /**
  * Carves a natural riverbed channel into the raw valley floor terrain.
  * Guarantees zero terrain clipping along the river banks and off-screen exit.
@@ -65,7 +82,10 @@ export function getCarvedValleyElevation(x, z, rawElevation) {
   let bestWaterY = 0;
   let bestWidth = 0;
 
-  for (let i = 6; i < SEG_COUNT; i++) {
+  for (let s = 0; s < _segBounds.length; s++) {
+    const b = _segBounds[s];
+    if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
+    const i = b.i;
     const p1 = RIVER_3D_POINTS[i];
     const p2 = RIVER_3D_POINTS[i + 1];
 

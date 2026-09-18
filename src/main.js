@@ -22,8 +22,26 @@ class App {
     this.clock = new THREE.Clock();
     this.currentWaypointIndex = 0;
     this._bootTime = Date.now();
+    this._animateBound = this.animate.bind(this);
+    this._resizeQueued = false;
+    this._isVisible = true;
 
     renderPortfolioContent(content);
+
+    // Cache frequently-queried DOM refs once (avoids per-event querySelectorAll)
+    this.dom = {
+      dockButtons: Array.from(document.querySelectorAll('.dock-btn')),
+      dock: document.querySelector('.bottom-dock'),
+      modalBackdrops: Array.from(document.querySelectorAll('.modal-backdrop')),
+      tabButtons: Array.from(document.querySelectorAll('.tab-btn')),
+      tabPanes: Array.from(document.querySelectorAll('.tab-pane')),
+      copyButtons: Array.from(document.querySelectorAll('[data-copy]')),
+      closeButtons: Array.from(document.querySelectorAll('[data-close]')),
+      inspectorModal: document.getElementById('project-inspector-modal'),
+      toast: document.getElementById('toast'),
+      toastMsg: document.getElementById('toast-message'),
+      cliInput: document.getElementById('cli-input'),
+    };
 
     this.initRenderer();
     this.initScene();
@@ -35,7 +53,24 @@ class App {
     this.initUI();
     this.initCLI();
 
-    window.addEventListener('resize', this.onResize.bind(this));
+    this._onResize = () => {
+      // Coalesce rapid resize bursts to one layout pass per frame
+      if (this._resizeQueued) return;
+      this._resizeQueued = true;
+      requestAnimationFrame(() => {
+        this._resizeQueued = false;
+        this.onResize();
+      });
+    };
+    window.addEventListener('resize', this._onResize, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      // Pause GPU work when tab hidden; clock delta clamped on resume
+      this._isVisible = !document.hidden;
+      if (this._isVisible) {
+        this.clock.getDelta();
+        if (!this._rafRunning) this.animate();
+      }
+    });
     this.animate();
 
     setTimeout(() => {
@@ -105,6 +140,10 @@ class App {
 
   initPostProcessing() {
     this.composer = new EffectComposer(this.renderer);
+    // Match composer pixel ratio to renderer so bloom cost scales identically
+    if (typeof this.composer.setPixelRatio === 'function') {
+      this.composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
     const renderPass = new RenderPass(this.scene, this.camera);
     this.composer.addPass(renderPass);
 
@@ -178,8 +217,8 @@ class App {
   }
 
   switchWaypoint(index) {
-    const dockButtons = document.querySelectorAll('.dock-btn');
-    const dock = document.querySelector('.bottom-dock');
+    const dockButtons = this.dom.dockButtons;
+    const dock = this.dom.dock;
 
     this.currentWaypointIndex = index;
 
@@ -206,8 +245,10 @@ class App {
     const modal = document.getElementById(modalId);
     if (!modal) return;
 
-    // Close any other open modal first
-    document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.add('hidden'));
+    // Close any other open modal first (cached list)
+    for (let i = 0; i < this.dom.modalBackdrops.length; i++) {
+      this.dom.modalBackdrops[i].classList.add('hidden');
+    }
 
     modal.classList.remove('hidden');
     soundscape.playModalSwoosh();
@@ -241,8 +282,8 @@ class App {
   }
 
   showToast(message) {
-    const toast = document.getElementById('toast');
-    const toastMsg = document.getElementById('toast-message');
+    const toast = this.dom.toast;
+    const toastMsg = this.dom.toastMsg;
     if (!toast || !toastMsg) return;
 
     toastMsg.textContent = message;
@@ -255,7 +296,7 @@ class App {
   }
 
   initUI() {
-    const dockButtons = document.querySelectorAll('.dock-btn');
+    const dockButtons = this.dom.dockButtons;
     const audioBtn = document.getElementById('audio-toggle');
     const audioStatus = audioBtn ? audioBtn.querySelector('.audio-status') : null;
 
@@ -268,16 +309,16 @@ class App {
       });
     });
 
-    // Modal Close Buttons
-    document.querySelectorAll('[data-close]').forEach(btn => {
+    // Modal Close Buttons (cached)
+    this.dom.closeButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const modalId = btn.getAttribute('data-close');
         this.closeModal(modalId);
       });
     });
 
-    // Click outside modal to close
-    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+    // Click outside modal to close (cached)
+    this.dom.modalBackdrops.forEach(modal => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           modal.classList.add('hidden');
@@ -286,10 +327,19 @@ class App {
       });
     });
 
-    // ESC key closes any modal
+    // Single unified keydown handler: ESC closes mixer, inspector, then modals
+    const mixBtnRef = document.getElementById('audio-mix-btn');
+    const mixPanelRef = document.getElementById('audio-mixer-panel');
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const inspectorModal = document.getElementById('project-inspector-modal');
+        if (mixPanelRef && !mixPanelRef.classList.contains('hidden')) {
+          mixPanelRef.classList.add('hidden');
+          if (mixBtnRef) {
+            mixBtnRef.setAttribute('aria-expanded', 'false');
+            mixBtnRef.classList.remove('playing');
+          }
+        }
+        const inspectorModal = this.dom.inspectorModal;
         if (inspectorModal && !inspectorModal.classList.contains('hidden')) {
           if (window.__projectShowcase) {
             window.__projectShowcase.closeInspector();
@@ -299,7 +349,7 @@ class App {
           return;
         }
 
-        const openModals = document.querySelectorAll('.modal-backdrop:not(.hidden)');
+        const openModals = this.dom.modalBackdrops.filter(m => !m.classList.contains('hidden'));
         if (openModals.length > 0) {
           openModals.forEach(m => m.classList.add('hidden'));
           soundscape.playModalSwoosh();
@@ -307,8 +357,8 @@ class App {
       }
     });
 
-    // CRT Tab Switcher
-    const tabButtons = document.querySelectorAll('.tab-btn');
+    // CRT Tab Switcher (cached)
+    const tabButtons = this.dom.tabButtons;
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const targetTab = btn.getAttribute('data-tab');
@@ -317,7 +367,7 @@ class App {
         tabButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        document.querySelectorAll('.tab-pane').forEach(pane => {
+        this.dom.tabPanes.forEach(pane => {
           pane.classList.remove('active');
         });
 
@@ -342,8 +392,8 @@ class App {
       });
     });
 
-    // One-Click Copy Buttons
-    document.querySelectorAll('[data-copy]').forEach(btn => {
+    // One-Click Copy Buttons (cached)
+    this.dom.copyButtons.forEach(btn => {
       btn.addEventListener('click', async () => {
         const text = btn.getAttribute('data-copy');
         try {
@@ -463,12 +513,8 @@ class App {
           setMixerOpen(false);
         }
       });
-
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !mixPanel.classList.contains('hidden')) {
-          setMixerOpen(false);
-        }
-      });
+      // NOTE: Escape-to-close is handled by the single unified window keydown
+      // handler above (avoids duplicate listeners firing per keypress).
     }
   }
 
@@ -1052,11 +1098,15 @@ class App {
   onResize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    const pixelRatio = Math.min(window.devicePixelRatio, 2);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
 
+    this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setSize(w, h);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    if (typeof this.composer.setPixelRatio === 'function') {
+      this.composer.setPixelRatio(pixelRatio);
+    }
     this.composer.setSize(w, h);
 
     if (this.bloomPass) {
@@ -1067,10 +1117,17 @@ class App {
   }
 
   animate() {
-    requestAnimationFrame(this.animate.bind(this));
+    if (!this._isVisible) {
+      this._rafRunning = false;
+      return;
+    }
+    this._rafRunning = true;
+    requestAnimationFrame(this._animateBound);
 
-    const delta = this.clock.getDelta();
-    const elapsedTime = this.clock.getElapsedTime();
+    // getDelta() updates elapsedTime internally; reading .elapsedTime avoids a
+    // second internal getDelta call that would return ~0 (old getElapsedTime bug)
+    const delta = Math.min(this.clock.getDelta(), 0.05);
+    const elapsedTime = this.clock.elapsedTime;
 
     if (this.cabin && this.cabin.update) this.cabin.update(elapsedTime);
     if (this.campfire && this.campfire.update) this.campfire.update(elapsedTime);

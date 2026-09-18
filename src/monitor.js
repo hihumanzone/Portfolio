@@ -13,17 +13,17 @@ function createDetailedWoodTextures() {
   const colorCanvas = document.createElement('canvas');
   colorCanvas.width = width;
   colorCanvas.height = height;
-  const cctx = colorCanvas.getContext('2d');
+  const cctx = colorCanvas.getContext('2d', { alpha: false });
 
   const bumpCanvas = document.createElement('canvas');
   bumpCanvas.width = width;
   bumpCanvas.height = height;
-  const bctx = bumpCanvas.getContext('2d');
+  const bctx = bumpCanvas.getContext('2d', { alpha: false });
 
   const roughCanvas = document.createElement('canvas');
   roughCanvas.width = width;
   roughCanvas.height = height;
-  const rctx = roughCanvas.getContext('2d');
+  const rctx = roughCanvas.getContext('2d', { alpha: false });
 
   // Fill base coats - Deep rich American Walnut
   cctx.fillStyle = '#3a2416';
@@ -67,33 +67,29 @@ function createDetailedWoodTextures() {
     const amp2 = 2.2;
 
     // Continuous fine wood fibers (smooth continuous curves, no step artifacts)
+    // One shared Path2D per fiber is stroked onto all three contexts: byte-
+    // identical pixels at ~1/3 of the path-construction cost (the per-point
+    // exp/sin math runs once instead of three times).
     const fiberCount = 420;
+    const halfPlank = plankHeight * 0.5;
     for (let i = 0; i < fiberCount; i++) {
       const baseY = yStart + Math.random() * plankHeight;
-      const distFromPlankCenter = Math.abs(baseY - (yStart + plankHeight * 0.5)) / (plankHeight * 0.5);
+      const distFromPlankCenter = Math.abs(baseY - (yStart + halfPlank)) / halfPlank;
 
       // Cathedral grain curvature
       const archInfluence = (1 - distFromPlankCenter) * 10;
       const alpha = 0.022 + Math.random() * 0.05;
       const isPore = Math.random() > 0.85;
 
-      cctx.beginPath();
-      bctx.beginPath();
-      rctx.beginPath();
-
-      cctx.moveTo(0, baseY);
-      bctx.moveTo(0, baseY);
-      rctx.moveTo(0, baseY);
+      const fiberPath = new Path2D();
+      fiberPath.moveTo(0, baseY);
 
       // Stepping x += 4 for perfectly smooth, continuous wood grain curves
       for (let x = 4; x <= width; x += 4) {
         const dx = (x - archCenterX) / width;
         const arch = Math.exp(-dx * dx * 7) * archInfluence;
         const wave = Math.sin(x * waveFreq1 + p) * amp1 + Math.sin(x * waveFreq2 + p * 2) * amp2;
-        const y = baseY + wave + arch;
-        cctx.lineTo(x, y);
-        bctx.lineTo(x, y);
-        rctx.lineTo(x, y);
+        fiberPath.lineTo(x, baseY + wave + arch);
       }
 
       const lineWidth = isPore ? 0.7 : 1.1 + Math.random() * 1.3;
@@ -106,9 +102,9 @@ function createDetailedWoodTextures() {
       bctx.strokeStyle = `rgba(112, 112, 112, ${alpha * 0.7})`; // very subtle pore indentation
       rctx.strokeStyle = `rgba(146, 146, 146, ${alpha * 0.5})`; // gentle diffuse pore texture
 
-      cctx.stroke();
-      bctx.stroke();
-      rctx.stroke();
+      cctx.stroke(fiberPath);
+      bctx.stroke(fiberPath);
+      rctx.stroke(fiberPath);
     }
 
     // Micro-pores (natural hardwood pore texture, 20-50px fine hairlines)
@@ -145,19 +141,19 @@ function createDetailedWoodTextures() {
   colorTex.wrapS = THREE.ClampToEdgeWrapping;
   colorTex.wrapT = THREE.ClampToEdgeWrapping;
   colorTex.repeat.set(1, 1);
-  colorTex.anisotropy = 8;
+  colorTex.anisotropy = 4;
 
   const bumpTex = new THREE.CanvasTexture(bumpCanvas);
   bumpTex.wrapS = THREE.ClampToEdgeWrapping;
   bumpTex.wrapT = THREE.ClampToEdgeWrapping;
   bumpTex.repeat.set(1, 1);
-  bumpTex.anisotropy = 8;
+  bumpTex.anisotropy = 4;
 
   const roughTex = new THREE.CanvasTexture(roughCanvas);
   roughTex.wrapS = THREE.ClampToEdgeWrapping;
   roughTex.wrapT = THREE.ClampToEdgeWrapping;
   roughTex.repeat.set(1, 1);
-  roughTex.anisotropy = 8;
+  roughTex.anisotropy = 4;
 
   return { colorTex, bumpTex, roughTex };
 }
@@ -172,17 +168,17 @@ function createWoodEdgeTextures() {
   const colorCanvas = document.createElement('canvas');
   colorCanvas.width = width;
   colorCanvas.height = height;
-  const cctx = colorCanvas.getContext('2d');
+  const cctx = colorCanvas.getContext('2d', { alpha: false });
 
   const bumpCanvas = document.createElement('canvas');
   bumpCanvas.width = width;
   bumpCanvas.height = height;
-  const bctx = bumpCanvas.getContext('2d');
+  const bctx = bumpCanvas.getContext('2d', { alpha: false });
 
   const roughCanvas = document.createElement('canvas');
   roughCanvas.width = width;
   roughCanvas.height = height;
-  const rctx = roughCanvas.getContext('2d');
+  const rctx = roughCanvas.getContext('2d', { alpha: false });
 
   // Deep rich walnut base matching tabletop
   cctx.fillStyle = '#342013';
@@ -203,23 +199,16 @@ function createWoodEdgeTextures() {
   cctx.fillStyle = grad;
   cctx.fillRect(0, 0, width, height);
 
-  // Horizontal wood grain edge lines
+  // Horizontal wood grain edge lines (one shared Path2D stroked 3x: identical pixels)
   for (let i = 0; i < 90; i++) {
     const y = Math.random() * height;
     const alpha = 0.025 + Math.random() * 0.045;
-    cctx.beginPath();
-    bctx.beginPath();
-    rctx.beginPath();
-
-    cctx.moveTo(0, y);
-    bctx.moveTo(0, y);
-    rctx.moveTo(0, y);
+    const edgePath = new Path2D();
+    edgePath.moveTo(0, y);
 
     for (let x = 8; x <= width; x += 8) {
       const wave = Math.sin(x * 0.003) * 2;
-      cctx.lineTo(x, y + wave);
-      bctx.lineTo(x, y + wave);
-      rctx.lineTo(x, y + wave);
+      edgePath.lineTo(x, y + wave);
     }
 
     cctx.strokeStyle = `rgba(14, 8, 4, ${alpha})`;
@@ -228,25 +217,25 @@ function createWoodEdgeTextures() {
     cctx.lineWidth = 1 + Math.random();
     bctx.lineWidth = 1 + Math.random();
     rctx.lineWidth = 1 + Math.random();
-    cctx.stroke();
-    bctx.stroke();
-    rctx.stroke();
+    cctx.stroke(edgePath);
+    bctx.stroke(edgePath);
+    rctx.stroke(edgePath);
   }
 
   const colorTex = new THREE.CanvasTexture(colorCanvas);
   colorTex.wrapS = THREE.ClampToEdgeWrapping;
   colorTex.wrapT = THREE.ClampToEdgeWrapping;
-  colorTex.anisotropy = 8;
+  colorTex.anisotropy = 4;
 
   const bumpTex = new THREE.CanvasTexture(bumpCanvas);
   bumpTex.wrapS = THREE.ClampToEdgeWrapping;
   bumpTex.wrapT = THREE.ClampToEdgeWrapping;
-  bumpTex.anisotropy = 8;
+  bumpTex.anisotropy = 4;
 
   const roughTex = new THREE.CanvasTexture(roughCanvas);
   roughTex.wrapS = THREE.ClampToEdgeWrapping;
   roughTex.wrapT = THREE.ClampToEdgeWrapping;
-  roughTex.anisotropy = 8;
+  roughTex.anisotropy = 4;
 
   return { colorTex, bumpTex, roughTex };
 }
@@ -258,7 +247,7 @@ function createBadgeTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 640;
   canvas.height = 92;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false });
 
   // Badge metallic dark slate background
   const bgGrad = ctx.createLinearGradient(0, 0, 0, 92);
@@ -314,19 +303,28 @@ function createPlasticTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 256;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false });
 
   ctx.fillStyle = '#cfc6b5';
   ctx.fillRect(0, 0, 256, 256);
 
-  // Stippled plastic micro-dots
+  // Stippled plastic micro-dots, batched into 2 fills (identical pixels, no
+  // 4000 fillStyle state changes)
+  const darkDots = new Path2D();
+  const lightDots = new Path2D();
   for (let i = 0; i < 4000; i++) {
     const x = Math.random() * 256;
     const y = Math.random() * 256;
-    const val = Math.random();
-    ctx.fillStyle = val > 0.5 ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.06)';
-    ctx.fillRect(x, y, 1.5, 1.5);
+    if (Math.random() > 0.5) {
+      darkDots.rect(x, y, 1.5, 1.5);
+    } else {
+      lightDots.rect(x, y, 1.5, 1.5);
+    }
   }
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+  ctx.fill(darkDots);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+  ctx.fill(lightDots);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
@@ -336,8 +334,68 @@ function createPlasticTexture() {
 }
 
 /**
+ * Fullscreen Button Icon Textures (expand / compress glyphs on dark slate).
+ * Rendered once; the face material swaps maps when fullscreen state changes.
+ */
+const FS_EXPAND_PATH = 'M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3';
+const FS_COMPRESS_PATH = 'M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3';
+
+function createFullscreenIconTexture(pathData) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, 128);
+  bgGrad.addColorStop(0, '#1c1f26');
+  bgGrad.addColorStop(0.5, '#12141a');
+  bgGrad.addColorStop(1, '#0b0d11');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 128, 128);
+
+  ctx.strokeStyle = '#484f5e';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(3, 3, 122, 122);
+
+  // Center the 24-unit glyph grid (scale 4 => 96px, 16px margins)
+  ctx.translate(16, 16);
+  ctx.scale(4, 4);
+  ctx.strokeStyle = '#f0ece2';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke(new Path2D(pathData));
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  return texture;
+}
+
+/**
  * True 3D Retro Monitor & Desk Application
  */
+
+// Content-independent procedural textures are generated once per page load and
+// shared (identical pixels; skips ~7M canvas ops on any re-instantiation).
+let _cachedWoodTextures = null;
+let _cachedWoodEdgeTextures = null;
+let _cachedPlasticTexture = null;
+
+function getWoodTextures() {
+  if (!_cachedWoodTextures) _cachedWoodTextures = createDetailedWoodTextures();
+  return _cachedWoodTextures;
+}
+
+function getWoodEdgeTextures() {
+  if (!_cachedWoodEdgeTextures) _cachedWoodEdgeTextures = createWoodEdgeTextures();
+  return _cachedWoodEdgeTextures;
+}
+
+function getPlasticTexture() {
+  if (!_cachedPlasticTexture) _cachedPlasticTexture = createPlasticTexture();
+  return _cachedPlasticTexture;
+}
+
 class RetroWorkspaceApp {
   constructor() {
     this.webglContainer = document.getElementById('webgl-container');
@@ -357,12 +415,34 @@ class RetroWorkspaceApp {
       if (this.dismissBtn && content.meta.landscapeAlert.dismissText) this.dismissBtn.textContent = content.meta.landscapeAlert.dismissText;
     }
 
+    this.raycaster = new THREE.Raycaster();
+    this.pointer = new THREE.Vector2(-999, -999);
+    this.badgeHovered = false;
+    this.badgePressing = false;
+    this.badgeTargetZ = 0;
+    // Fullscreen 3D push-button state (mirrors the badge button pattern)
+    this.fsHovered = false;
+    this.fsPressing = false;
+    this.fsTargetZ = 0;
+    this._fsSupported = true;
+    // Coalesce pointermove raycasts to one check per frame
+    this._hoverCheckQueued = false;
+    this._animateBound = null;
+    this._resizeQueued = false;
+    this._isVisible = true;
+    // Static-scene fast path: shadows + WebGL re-render only when dirty
+    this._sceneDirty = true;
+    this._warmupFrames = 4;
+    this._badgeTargets = null;
+
     this.initScene();
     this.initLights();
     this.createTableMesh();
     this.createMonitorMesh();
+    this.freezeStaticMatrices();
     this.createCSS3DScreen();
     this.initEvents();
+    this.initFullscreen();
     this.onResize();
     this.animate();
 
@@ -399,6 +479,9 @@ class RetroWorkspaceApp {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    // Fully static scene (only the badge button ever moves): never re-render
+    // the shadow map unless a WebGL frame is explicitly requested below.
+    this.renderer.shadowMap.autoUpdate = false;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
     this.webglContainer.appendChild(this.renderer.domElement);
@@ -445,8 +528,8 @@ class RetroWorkspaceApp {
    * Builds the enhanced pure 3D Desk/Table geometry
    */
   createTableMesh() {
-    this.woodTextures = createDetailedWoodTextures();
-    this.woodEdgeTextures = createWoodEdgeTextures();
+    this.woodTextures = getWoodTextures();
+    this.woodEdgeTextures = getWoodEdgeTextures();
 
     // High-end satin furniture lacquer walnut material for top surface
     const topMat = new THREE.MeshStandardMaterial({
@@ -503,17 +586,26 @@ class RetroWorkspaceApp {
       [-1200, -450, -900],
       [1200, -450, -900]
     ];
-    legPositions.forEach(([x, y, z]) => {
-      const leg = new THREE.Mesh(legGeo, edgeMat);
-      leg.position.set(x, y, z);
-      leg.castShadow = true;
-      leg.receiveShadow = true;
-      this.tableGroup.add(leg);
+    // Legs + feet as single-draw instanced meshes (identical transforms/shadows)
+    const _legDummy = new THREE.Object3D();
+    const instancedLegs = new THREE.InstancedMesh(legGeo, edgeMat, legPositions.length);
+    instancedLegs.castShadow = true;
+    instancedLegs.receiveShadow = true;
+    const instancedFeet = new THREE.InstancedMesh(brassFootGeo, brassFootMat, legPositions.length);
+    legPositions.forEach(([x, y, z], idx) => {
+      _legDummy.position.set(x, y, z);
+      _legDummy.rotation.set(0, 0, 0);
+      _legDummy.scale.set(1, 1, 1);
+      _legDummy.updateMatrix();
+      instancedLegs.setMatrixAt(idx, _legDummy.matrix);
 
-      const brassFoot = new THREE.Mesh(brassFootGeo, brassFootMat);
-      brassFoot.position.set(x, -760, z);
-      this.tableGroup.add(brassFoot);
+      _legDummy.position.set(x, -760, z);
+      _legDummy.updateMatrix();
+      instancedFeet.setMatrixAt(idx, _legDummy.matrix);
     });
+    instancedLegs.instanceMatrix.needsUpdate = true;
+    instancedFeet.instanceMatrix.needsUpdate = true;
+    this.tableGroup.add(instancedLegs, instancedFeet);
 
     // 3. Table Support Apron/Skirt
     const apronGeo = new THREE.BoxGeometry(2450, 75, 24);
@@ -538,7 +630,7 @@ class RetroWorkspaceApp {
     // Subtle 2.5-degree upward tilt typical of desktop CRT workstations
     this.monitorGroup.rotation.x = -0.04;
 
-    this.plasticTexture = createPlasticTexture();
+    this.plasticTexture = getPlasticTexture();
 
     // Main Vintage Beige Material
     this.chassisMat = new THREE.MeshStandardMaterial({
@@ -663,34 +755,84 @@ class RetroWorkspaceApp {
     const ventGroup = new THREE.Group();
     const ventSlotGeo = new THREE.BoxGeometry(38, 5, 8);
     const ventMat = new THREE.MeshStandardMaterial({ color: 0x3a342a, roughness: 0.8 });
-    for (let i = -6; i <= 6; i++) {
-      const slot = new THREE.Mesh(ventSlotGeo, ventMat);
-      slot.position.set(i * 50, 962, -20);
-      ventGroup.add(slot);
+    // 13 slots, one draw call (identical placement, no per-slot meshes)
+    const instancedVents = new THREE.InstancedMesh(ventSlotGeo, ventMat, 13);
+    {
+      const dummy = new THREE.Object3D();
+      for (let i = -6; i <= 6; i++) {
+        dummy.position.set(i * 50, 962, -20);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        instancedVents.setMatrixAt(i + 6, dummy.matrix);
+      }
     }
+    instancedVents.instanceMatrix.needsUpdate = true;
+    ventGroup.add(instancedVents);
     this.monitorGroup.add(ventGroup);
 
     // -------------------------------------------------------------------------
     // 4. Bottom Chin Details: Nameplate Badge, Dials, LED
     // -------------------------------------------------------------------------
-    // Nameplate Badge Mesh: "RIDDHIMAN KUNDAL PORTFOLIO"
+    // Nameplate Badge Push-Button: "RIDDHIMAN KUNDAL PORTFOLIO"
+    // Recessed socket housing so the button reads as a real 3D push-button
+    const socketGeo = new THREE.BoxGeometry(336, 60, 8);
+    const socketMesh = new THREE.Mesh(socketGeo, this.darkBezelMat);
+    socketMesh.position.set(-330, 58, 34);
+    socketMesh.receiveShadow = true;
+    this.monitorGroup.add(socketMesh);
+
     const badgeTexture = createBadgeTexture();
-    const badgeGeo = new THREE.BoxGeometry(320, 46, 6);
+    const badgeGeo = new THREE.BoxGeometry(320, 46, 16);
     const badgeMat = new THREE.MeshStandardMaterial({
       map: badgeTexture,
       roughness: 0.35,
       metalness: 0.15
     });
-    const badgeMesh = new THREE.Mesh(badgeGeo, badgeMat);
-    badgeMesh.position.set(-330, 58, 38);
+    // Dark plastic sides so only the front face shows the label texture
+    const badgeSideMat = new THREE.MeshStandardMaterial({
+      color: 0x0d0f14,
+      roughness: 0.5,
+      metalness: 0.2
+    });
+    const badgeMesh = new THREE.Mesh(badgeGeo, [
+      badgeSideMat, // +X
+      badgeSideMat, // -X
+      badgeSideMat, // +Y
+      badgeSideMat, // -Y
+      badgeMat,     // +Z front face
+      badgeSideMat  // -Z
+    ]);
+    // Rest position pops out of the chin; pressed position sits near-flush
+    this.badgeRestZ = 46;
+    this.badgePressedZ = 38;
+    this.badgeTargetZ = this.badgeRestZ;
+    badgeMesh.position.set(-330, 58, this.badgeRestZ);
+    badgeMesh.castShadow = true;
+    badgeMesh.userData.isPortfolioBadge = true;
+    badgeMesh.userData.portfolioUrl = 'portfolio.html';
     this.monitorGroup.add(badgeMesh);
+    this.badgeMesh = badgeMesh;
+    this.badgeMat = badgeMat;
 
-    // Decorative Center Mini-Vents
-    for (let i = -2; i <= 2; i++) {
-      const miniVent = new THREE.Mesh(new THREE.BoxGeometry(4, 22, 4), ventMat);
-      miniVent.position.set(i * 9, 58, 36);
-      this.monitorGroup.add(miniVent);
+    // Click target is the badge mesh itself (same size as the button)
+    this.badgeHitbox = null;
+
+    // Decorative Center Mini-Vents (one shared geo, one draw call)
+    const miniVentGeo = new THREE.BoxGeometry(4, 22, 4);
+    const instancedMiniVents = new THREE.InstancedMesh(miniVentGeo, ventMat, 5);
+    {
+      const dummy = new THREE.Object3D();
+      for (let i = -2; i <= 2; i++) {
+        dummy.position.set(i * 9, 58, 36);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        instancedMiniVents.setMatrixAt(i + 2, dummy.matrix);
+      }
     }
+    instancedMiniVents.instanceMatrix.needsUpdate = true;
+    this.monitorGroup.add(instancedMiniVents);
 
     // Rotary Knobs: Brightness & Contrast
     const knobGeo = new THREE.CylinderGeometry(13, 13, 12, 24);
@@ -742,6 +884,44 @@ class RetroWorkspaceApp {
     ledLight.position.set(505, 58, 48);
     this.monitorGroup.add(ledLight);
 
+    // Fullscreen Push-Button: badge-style 3D control on the chin, in the open
+    // bay between the portfolio badge (right edge -162) and the mini-vents.
+    // Recessed socket housing + 8-unit travel mirror the RIDDHIMAN PORTFOLIO
+    // button so the inward press reads clearly. Icon face swaps between
+    // expand/compress glyphs with fullscreen state.
+    const fsSocketGeo = new THREE.BoxGeometry(54, 54, 8);
+    const fsSocketMesh = new THREE.Mesh(fsSocketGeo, this.darkBezelMat);
+    fsSocketMesh.position.set(-110, 58, 34);
+    fsSocketMesh.receiveShadow = true;
+    this.monitorGroup.add(fsSocketMesh);
+
+    this.fsExpandTex = createFullscreenIconTexture(FS_EXPAND_PATH);
+    this.fsCompressTex = createFullscreenIconTexture(FS_COMPRESS_PATH);
+    const fsFaceGeo = new THREE.BoxGeometry(40, 40, 16);
+    this.fsIconMat = new THREE.MeshStandardMaterial({
+      map: this.fsExpandTex,
+      roughness: 0.4,
+      metalness: 0.1
+    });
+    const fsButtonMesh = new THREE.Mesh(fsFaceGeo, [
+      this.darkBezelMat, // +X
+      this.darkBezelMat, // -X
+      this.darkBezelMat, // +Y
+      this.darkBezelMat, // -Y
+      this.fsIconMat,    // +Z front face
+      this.darkBezelMat  // -Z
+    ]);
+    // Rest position pops out of the socket; pressed position sits near-flush
+    // (same 8-unit travel as the portfolio badge)
+    this.fsRestZ = 46;
+    this.fsPressedZ = 38;
+    this.fsTargetZ = this.fsRestZ;
+    fsButtonMesh.position.set(-110, 58, this.fsRestZ);
+    fsButtonMesh.castShadow = true;
+    fsButtonMesh.userData.isFullscreenButton = true;
+    this.monitorGroup.add(fsButtonMesh);
+    this.fsButtonMesh = fsButtonMesh;
+
     // -------------------------------------------------------------------------
     // 5. Pedestal Swivel Stand (Rests firmly on Tabletop at y = -95)
     // -------------------------------------------------------------------------
@@ -776,6 +956,24 @@ class RetroWorkspaceApp {
     this.monitorGroup.add(pedestalGroup);
 
     this.scene.add(this.monitorGroup);
+  }
+
+  /**
+   * Freezes every static local matrix (nothing in the scene moves except the
+   * badge button). Skips per-frame matrix recomposition at zero visual cost.
+   */
+  freezeStaticMatrices() {
+    for (const group of [this.tableGroup, this.monitorGroup]) {
+      if (!group) continue;
+      group.traverse((obj) => {
+        // Both push-buttons animate, so their matrices stay live
+        if (obj === this.badgeMesh || obj === this.fsButtonMesh) return;
+        obj.updateMatrix();
+        obj.matrixAutoUpdate = false;
+      });
+    }
+    this.scene.updateMatrixWorld(true);
+    this._sceneDirty = true;
   }
 
   /**
@@ -821,9 +1019,154 @@ class RetroWorkspaceApp {
     this.cssScene.add(this.screenObject);
   }
 
+  updatePointerFromEvent(e) {
+    this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+    this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  }
+
+  getBadgeTargets() {
+    // Built once: badgeMesh/hitbox are assigned once during construction
+    if (!this._badgeTargets) {
+      this._badgeTargets = [];
+      if (this.badgeMesh) this._badgeTargets.push(this.badgeMesh);
+      if (this.badgeHitbox) this._badgeTargets.push(this.badgeHitbox);
+    }
+    return this._badgeTargets;
+  }
+
+  isBadgeHovered() {
+    const targets = this.getBadgeTargets();
+    if (!targets.length || !this.camera) return false;
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const intersects = this.raycaster.intersectObjects(targets, false);
+    return intersects.length > 0;
+  }
+
+  setBadgeHovered(hovered) {
+    if (this.badgeHovered === hovered) return;
+    this.badgeHovered = hovered;
+    document.body.style.cursor = hovered ? 'pointer' : '';
+    // Subtle hover glow feedback on the badge
+    if (this.badgeMat && this.badgeMat.emissive) {
+      this.badgeMat.emissive.setHex(hovered ? 0x2a2416 : 0x000000);
+      this.badgeMat.emissiveIntensity = hovered ? 0.6 : 0;
+      // Emissive change needs one fresh WebGL frame to become visible
+      this._sceneDirty = true;
+    }
+  }
+
+  openPortfolioSite() {
+    const url = this.badgeMesh?.userData?.portfolioUrl || 'portfolio.html';
+    // Anchor click opens exactly once in a new tab (window.open with
+    // 'noopener' returns null even on success, which caused a double-open
+    // when combined with a location.href fallback).
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  pressBadgeAndOpen() {
+    if (this.badgePressing || !this.badgeMesh) {
+      if (!this.badgeMesh) this.openPortfolioSite();
+      return;
+    }
+    this.badgePressing = true;
+    // Press inwards
+    this.badgeTargetZ = this.badgePressedZ;
+    setTimeout(() => {
+      // Release back out
+      this.badgeTargetZ = this.badgeRestZ;
+    }, 130);
+    setTimeout(() => {
+      this.badgePressing = false;
+      this.openPortfolioSite();
+    }, 260);
+  }
+
+  getFsTargets() {
+    // Built once: the fullscreen button mesh is assigned once during construction
+    if (!this._fsTargets) {
+      this._fsTargets = [];
+      if (this.fsButtonMesh) this._fsTargets.push(this.fsButtonMesh);
+    }
+    return this._fsTargets;
+  }
+
+  isFsHovered() {
+    if (!this._fsSupported || !this.camera || !this.fsButtonMesh) return false;
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.getFsTargets(), false);
+    return intersects.length > 0;
+  }
+
+  setFsHovered(hovered) {
+    if (this.fsHovered === hovered) return;
+    this.fsHovered = hovered;
+    if (!this.badgeHovered) document.body.style.cursor = hovered ? 'pointer' : '';
+    // Subtle hover glow feedback on the button face
+    if (this.fsIconMat && this.fsIconMat.emissive) {
+      this.fsIconMat.emissive.setHex(hovered ? 0x2a2416 : 0x000000);
+      this.fsIconMat.emissiveIntensity = hovered ? 0.6 : 0;
+      // Emissive change needs one fresh WebGL frame to become visible
+      this._sceneDirty = true;
+    }
+  }
+
+  toggleFullscreen() {
+    const docEl = document.documentElement;
+    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if (isFs) {
+      const exit = document.exitFullscreen
+        ? document.exitFullscreen()
+        : (document.webkitExitFullscreen ? document.webkitExitFullscreen() : null);
+      if (exit && typeof exit.catch === 'function') exit.catch(() => {});
+    } else {
+      if (!this._fsSupported) return;
+      const request = docEl.requestFullscreen
+        ? docEl.requestFullscreen()
+        : docEl.webkitRequestFullscreen();
+      if (request && typeof request.catch === 'function') request.catch(() => {});
+    }
+  }
+
+  pressFsAndToggle() {
+    if (this.fsPressing || !this.fsButtonMesh) {
+      if (!this.fsButtonMesh) this.toggleFullscreen();
+      return;
+    }
+    this.fsPressing = true;
+    // Press inwards
+    this.fsTargetZ = this.fsPressedZ;
+    setTimeout(() => {
+      // Release back out
+      this.fsTargetZ = this.fsRestZ;
+    }, 130);
+    setTimeout(() => {
+      this.fsPressing = false;
+      this.toggleFullscreen();
+    }, 260);
+  }
+
   initEvents() {
-    window.addEventListener('resize', () => this.onResize());
-    window.addEventListener('orientationchange', () => this.onResize());
+    const queueResize = () => {
+      if (this._resizeQueued) return;
+      this._resizeQueued = true;
+      requestAnimationFrame(() => {
+        this._resizeQueued = false;
+        this.onResize();
+      });
+    };
+    window.addEventListener('resize', queueResize, { passive: true });
+    window.addEventListener('orientationchange', queueResize, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      this._isVisible = !document.hidden;
+      if (this._isVisible) this._sceneDirty = true;
+      if (this._isVisible && this._animateBound && !this._rafRunning) this._animateBound();
+    });
 
     if (this.dismissBtn) {
       this.dismissBtn.addEventListener('click', () => {
@@ -833,6 +1176,108 @@ class RetroWorkspaceApp {
         }
       });
     }
+
+    // Hover feedback: pointer cursor over the PORTFOLIO badge or the
+    // fullscreen button (raycasts coalesced to one check per frame via rAF)
+    const queueHoverCheck = () => {
+      if (this._hoverCheckQueued) return;
+      this._hoverCheckQueued = true;
+      requestAnimationFrame(() => {
+        this._hoverCheckQueued = false;
+        this.setBadgeHovered(this.isBadgeHovered());
+        this.setFsHovered(this.isFsHovered());
+      });
+    };
+    window.addEventListener('pointermove', (e) => {
+      // Ignore DOM UI so the badge doesn't steal pointer state from real controls
+      const t = e.target;
+      if (t instanceof Element && typeof t.closest === 'function') {
+        if (t.closest('#portfolio-frame, .screen-3d-viewport, button, a, input, textarea, .portrait-alert-banner')) {
+          if (this.badgeHovered) this.setBadgeHovered(false);
+          if (this.fsHovered) this.setFsHovered(false);
+          return;
+        }
+      }
+      this.updatePointerFromEvent(e);
+      queueHoverCheck();
+    }, { passive: true });
+
+    // Press-in feel the moment a button is pushed down
+    window.addEventListener('pointerdown', (e) => {
+      const t = e.target;
+      if (t instanceof Element && typeof t.closest === 'function') {
+        if (t.closest('#portfolio-frame, .screen-3d-viewport, button, a, input, textarea, .portrait-alert-banner')) {
+          return;
+        }
+      }
+      this.updatePointerFromEvent(e);
+      if (this.isFsHovered() && !this.fsPressing) {
+        this.fsTargetZ = this.fsPressedZ;
+      } else if (this.isBadgeHovered() && !this.badgePressing) {
+        this.badgeTargetZ = this.badgePressedZ;
+      }
+    });
+
+    // If pressed but not clicked (e.g. drag off), let the buttons come back out
+    window.addEventListener('pointerup', () => {
+      if (!this.badgePressing && this.badgeMesh) {
+        this.badgeTargetZ = this.badgeRestZ;
+      }
+      if (!this.fsPressing && this.fsButtonMesh) {
+        this.fsTargetZ = this.fsRestZ;
+      }
+    });
+
+    // Click a button → press it inwards, release, then run its action
+    window.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t instanceof Element && typeof t.closest === 'function') {
+        if (t.closest('#portfolio-frame, .screen-3d-viewport, button, a, input, textarea, .portrait-alert-banner')) {
+          return;
+        }
+      }
+      this.updatePointerFromEvent(e);
+      if (this.isFsHovered()) {
+        this.pressFsAndToggle();
+      } else if (this.isBadgeHovered()) {
+        this.pressBadgeAndOpen();
+      }
+    });
+  }
+
+  /**
+   * Fullscreen state sync for the 3D button (Fullscreen API with Safari fallback).
+   * The button face swaps between expand/compress glyphs. Entering/exiting
+   * fires a viewport resize, which the existing resize handler already uses
+   * to refit both renderers. Without API support the 3D button stays hidden.
+   */
+  initFullscreen() {
+    const docEl = document.documentElement;
+    this._fsSupported = !!(
+      (docEl.requestFullscreen || docEl.webkitRequestFullscreen) &&
+      (document.exitFullscreen || document.webkitExitFullscreen)
+    );
+    if (!this._fsSupported && this.fsButtonMesh) {
+      this.fsButtonMesh.visible = false;
+      return;
+    }
+
+    const syncFsIcon = () => {
+      const active = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (this.fsIconMat) {
+        const tex = active ? this.fsCompressTex : this.fsExpandTex;
+        if (this.fsIconMat.map !== tex) {
+          this.fsIconMat.map = tex;
+          this.fsIconMat.needsUpdate = true;
+          this._sceneDirty = true;
+        }
+      }
+    };
+
+    // Covers Esc-key exits and any external fullscreen changes
+    document.addEventListener('fullscreenchange', syncFsIcon);
+    document.addEventListener('webkitfullscreenchange', syncFsIcon);
+    syncFsIcon();
   }
 
   onResize() {
@@ -860,6 +1305,8 @@ class RetroWorkspaceApp {
 
     this.renderer.setSize(width, height);
     this.cssRenderer.setSize(width, height);
+    // Resized buffers need a fresh frame (shadow map included)
+    this._sceneDirty = true;
 
     // Portrait Orientation Notice
     const isPortrait = height > width;
@@ -874,10 +1321,52 @@ class RetroWorkspaceApp {
   }
 
   animate() {
-    requestAnimationFrame(this.animate.bind(this));
+    if (!this._animateBound) this._animateBound = () => this.animate();
+    if (!this._isVisible) {
+      this._rafRunning = false;
+      return;
+    }
+    this._rafRunning = true;
+    requestAnimationFrame(this._animateBound);
 
-    // Render WebGL 3D meshes (monitor, desk, shadows) & CSS3D screen in lockstep
-    this.renderer.render(this.scene, this.camera);
+    // Animate the push-button travel (press in / spring back out)
+    // Identical easing/thresholds; also reports whether the scene is settled
+    let badgeSettled = true;
+    if (this.badgeMesh) {
+      const currentZ = this.badgeMesh.position.z;
+      const targetZ = this.badgeTargetZ || this.badgeRestZ || currentZ;
+      const nextZ = currentZ + (targetZ - currentZ) * 0.35;
+      if (Math.abs(targetZ - nextZ) < 0.05) {
+        this.badgeMesh.position.z = targetZ;
+      } else {
+        this.badgeMesh.position.z = nextZ;
+        badgeSettled = false;
+      }
+    }
+
+    let fsSettled = true;
+    if (this.fsButtonMesh && this.fsButtonMesh.visible) {
+      const currentZ = this.fsButtonMesh.position.z;
+      const targetZ = this.fsTargetZ || this.fsRestZ || currentZ;
+      const nextZ = currentZ + (targetZ - currentZ) * 0.35;
+      if (Math.abs(targetZ - nextZ) < 0.05) {
+        this.fsButtonMesh.position.z = targetZ;
+      } else {
+        this.fsButtonMesh.position.z = nextZ;
+        fsSettled = false;
+      }
+    }
+
+    // Static scene: re-render WebGL (with a shadow refresh) only while a
+    // button is travelling, something explicitly dirtied the scene, or during
+    // warmup frames that let textures/shaders settle. The CSS3D iframe paints
+    // itself independently, so it renders unconditionally.
+    if (this._sceneDirty || !badgeSettled || !fsSettled || this._warmupFrames > 0) {
+      this._sceneDirty = false;
+      if (this._warmupFrames > 0) this._warmupFrames--;
+      this.renderer.shadowMap.needsUpdate = true;
+      this.renderer.render(this.scene, this.camera);
+    }
     this.cssRenderer.render(this.cssScene, this.camera);
   }
 }

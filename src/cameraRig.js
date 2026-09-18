@@ -74,10 +74,11 @@ export class CameraRig {
   }
 
   bindEvents() {
+    // Coalesce pointer input: store latest target, consumed once per frame in update()
     window.addEventListener('mousemove', (e) => {
       this.mouseTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
       this.mouseTarget.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    });
+    }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
       if (e.touches.length > 0) {
@@ -132,8 +133,10 @@ export class CameraRig {
   update(delta) {
     this.idleTime += delta;
 
-    this.mouseCurrent.x += (this.mouseTarget.x - this.mouseCurrent.x) * 0.04;
-    this.mouseCurrent.y += (this.mouseTarget.y - this.mouseCurrent.y) * 0.04;
+    // Frame-rate independent smoothing: ~0.04/frame at 60fps, identical feel at any refresh
+    const alpha = 1 - Math.exp(-delta * 2.5);
+    this.mouseCurrent.x += (this.mouseTarget.x - this.mouseCurrent.x) * alpha;
+    this.mouseCurrent.y += (this.mouseTarget.y - this.mouseCurrent.y) * alpha;
 
     const driftX = Math.sin(this.idleTime * 0.4) * 0.25;
     const driftY = Math.cos(this.idleTime * 0.3) * 0.18;

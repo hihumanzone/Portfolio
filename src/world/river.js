@@ -475,6 +475,7 @@ export function createRiver(scene, mountainGroup) {
     dropPositions[d * 3 + 2] += dropData[d].vz * dropData[d].life;
   }
   dropGeo.setAttribute('position', new THREE.BufferAttribute(dropPositions, 3));
+  dropGeo.attributes.position.setUsage(THREE.DynamicDrawUsage);
 
   // Crisp, bright low-poly water droplet bead texture (clearly visible bubble)
   const dropCanvas = document.createElement('canvas');
@@ -552,6 +553,7 @@ export function createRiver(scene, mountainGroup) {
   }
 
   mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPositions, 3));
+  mistGeo.attributes.position.setUsage(THREE.DynamicDrawUsage);
 
   const mistCanvas = document.createElement('canvas');
   mistCanvas.width = 64;

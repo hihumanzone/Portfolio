@@ -492,6 +492,8 @@ function createShootingStarSystem(parentGroup, camera) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.attributes.position.setUsage(THREE.DynamicDrawUsage);
+    geo.attributes.color.setUsage(THREE.DynamicDrawUsage);
     geo.setIndex(new THREE.BufferAttribute(indices, 1));
 
     const mat = new THREE.MeshBasicMaterial({
@@ -528,6 +530,8 @@ function createShootingStarSystem(parentGroup, camera) {
   const tempTail = new THREE.Vector3();
   const tempToCam = new THREE.Vector3();
   const tempSide = new THREE.Vector3();
+  const tempTarget = new THREE.Vector3();
+  const fallbackCamPos = new THREE.Vector3(14, 11.5, 17);
 
   function spawnMeteor() {
     const meteor = meteors.find(m => !m.active);
@@ -547,7 +551,7 @@ function createShootingStarSystem(parentGroup, camera) {
     const endTheta = theta + 0.16 + (Math.random() - 0.5) * 0.12;
     const endPhi = phi + 0.14 + Math.random() * 0.06;
 
-    const targetPos = new THREE.Vector3(
+    const targetPos = tempTarget.set(
       r * Math.sin(endPhi) * Math.cos(endTheta),
       r * Math.cos(endPhi),
       r * Math.sin(endPhi) * Math.sin(endTheta)
@@ -573,7 +577,7 @@ function createShootingStarSystem(parentGroup, camera) {
         nextSpawnTime = 7.0 + Math.random() * 6.5;
       }
 
-      const camPos = (camera && camera.position) ? camera.position : new THREE.Vector3(14, 11.5, 17);
+      const camPos = (camera && camera.position) ? camera.position : fallbackCamPos;
 
       meteors.forEach((m) => {
         if (!m.active) return;

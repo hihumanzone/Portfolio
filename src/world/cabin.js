@@ -1492,6 +1492,8 @@ export function createCabin(scene) {
   ];
 
   const footPlateGeo = new THREE.BoxGeometry(0.14, 0.04, 0.14);
+  const _strutDir = new THREE.Vector3();
+  const _upAxis = new THREE.Vector3(0, 1, 0);
   strutAnchorPoints.forEach(footPos => {
     const foot = new THREE.Mesh(footPlateGeo, towerMetalMat);
     foot.position.copy(footPos);
@@ -1499,14 +1501,15 @@ export function createCabin(scene) {
     foot.castShadow = true;
     signalTowerGroup.add(foot);
 
-    const strutDir = new THREE.Vector3().subVectors(footPos, mastAttachPoint);
-    const strutLen = strutDir.length();
+    _strutDir.subVectors(footPos, mastAttachPoint);
+    const strutLen = _strutDir.length();
+    _strutDir.normalize();
     const strutMesh = new THREE.Mesh(
       new THREE.CylinderGeometry(0.02, 0.02, strutLen, 5),
       towerMetalMat
     );
     strutMesh.position.addVectors(mastAttachPoint, footPos).multiplyScalar(0.5);
-    strutMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), strutDir.clone().normalize());
+    strutMesh.quaternion.setFromUnitVectors(_upAxis, _strutDir);
     signalTowerGroup.add(strutMesh);
   });
 
@@ -1619,7 +1622,8 @@ export function createCabin(scene) {
       lanternPivot.rotation.z = Math.sin(time * 2.2) * 0.12;
       lanternPivot.rotation.x = Math.cos(time * 1.8) * 0.08;
 
-      const flicker = Math.sin(time * 8.0) * 0.15 + (Math.random() - 0.5) * 0.1;
+      // Deterministic flicker (same ±0.05 amplitude as before, no per-frame RNG)
+      const flicker = Math.sin(time * 8.0) * 0.15 + Math.sin(time * 41.0 + 1.3) * 0.05;
       lanternLight.intensity = 3.2 + flicker;
       rockLanternLight.intensity = 2.8 + flicker * 0.7;
       sconceLight.intensity = 2.0 + flicker * 0.5;

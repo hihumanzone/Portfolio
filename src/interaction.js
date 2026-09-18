@@ -19,6 +19,12 @@ export class InteractionManager {
 
     this.tooltipEl = document.getElementById('object-tooltip');
     this.tooltipText = document.getElementById('tooltip-text');
+    this._tooltipHidden = true;
+    this._lastTooltipX = 0;
+    this._lastTooltipY = 0;
+    this._pendingMouseX = 0;
+    this._pendingMouseY = 0;
+    this._hasPendingMouse = false;
 
     this.bindEvents();
   }
@@ -55,12 +61,14 @@ export class InteractionManager {
       if (isPointerOverUI(e)) {
         this.isOverUI = true;
         this.mouse.set(-999, -999);
+        this.mouseDirty = true;
         if (this.hoveredTarget) {
           this.hoveredTarget = null;
           this.domElement.style.cursor = 'default';
         }
-        if (this.tooltipEl) {
+        if (this.tooltipEl && !this._tooltipHidden) {
           this.tooltipEl.classList.add('hidden');
+          this._tooltipHidden = true;
         }
         return;
       }
@@ -68,12 +76,13 @@ export class InteractionManager {
       this.isOverUI = false;
       this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      this.mouseDirty = true;
 
-      if (this.tooltipEl && !this.tooltipEl.classList.contains('hidden')) {
-        this.tooltipEl.style.left = `${e.clientX}px`;
-        this.tooltipEl.style.top = `${e.clientY}px`;
-      }
-    });
+      // Defer tooltip positioning to update() via transform (no layout thrash)
+      this._pendingMouseX = e.clientX;
+      this._pendingMouseY = e.clientY;
+      this._hasPendingMouse = true;
+    }, { passive: true });
 
     window.addEventListener('mouseleave', () => {
       this.isOverUI = true;
@@ -113,12 +122,28 @@ export class InteractionManager {
   }
 
   update() {
+    // Coalesce tooltip positioning to one style write per frame (was per-mousemove)
+    if (this.tooltipEl && !this._tooltipHidden && this._hasPendingMouse) {
+      this._hasPendingMouse = false;
+      if (this._pendingMouseX !== this._lastTooltipX || this._pendingMouseY !== this._lastTooltipY) {
+        this._lastTooltipX = this._pendingMouseX;
+        this._lastTooltipY = this._pendingMouseY;
+        this.tooltipEl.style.left = `${this._lastTooltipX}px`;
+        this.tooltipEl.style.top = `${this._lastTooltipY}px`;
+      }
+    }
+
+    // Skip raycast when pointer hasn't moved and hover state is settled
+    if (!this.mouseDirty) return;
+    this.mouseDirty = false;
+
     if (this.isOverUI || !this.interactiveTargets.length) {
       if (this.hoveredTarget) {
         this.hoveredTarget = null;
         this.domElement.style.cursor = 'default';
-        if (this.tooltipEl) {
+        if (this.tooltipEl && !this._tooltipHidden) {
           this.tooltipEl.classList.add('hidden');
+          this._tooltipHidden = true;
         }
       }
       return;
@@ -155,7 +180,10 @@ export class InteractionManager {
           this.domElement.style.cursor = 'pointer';
           if (this.tooltipEl && this.tooltipText) {
             this.tooltipText.textContent = targetInteractive.userData.label || 'Click to Inspect';
-            this.tooltipEl.classList.remove('hidden');
+            if (this._tooltipHidden) {
+              this.tooltipEl.classList.remove('hidden');
+              this._tooltipHidden = false;
+            }
           }
         }
         return;
@@ -165,8 +193,9 @@ export class InteractionManager {
     if (this.hoveredTarget) {
       this.hoveredTarget = null;
       this.domElement.style.cursor = 'default';
-      if (this.tooltipEl) {
+      if (this.tooltipEl && !this._tooltipHidden) {
         this.tooltipEl.classList.add('hidden');
+        this._tooltipHidden = true;
       }
     }
   }

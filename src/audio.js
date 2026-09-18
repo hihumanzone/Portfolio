@@ -45,6 +45,12 @@ class AmbientSoundscape {
 
     // Key-click rate limiter (typewriter fires every ~8ms; cap the patter)
     this._lastKeyClickAt = 0;
+    // Pooled short-noise buffers (avoids per-SFX createBuffer + Math.random loops)
+    this._tickBuffer = null;
+    this._swooshBuffer = null;
+    this._burstBuffers = [];
+    // Shared stereo panner for cricket choruses (avoids per-burst node leak)
+    this._cricketPanner = null;
   }
 
   /**
@@ -432,6 +438,13 @@ class AmbientSoundscape {
     crackleGain.connect(this.fireGain);
 
     const dur = buffer.duration;
+    crackleSource.onended = () => {
+      try {
+        crackleSource.disconnect();
+        filter.disconnect();
+        crackleGain.disconnect();
+      } catch {}
+    };
     crackleSource.start(t);
     crackleSource.stop(t + dur + 0.01);
 
@@ -468,14 +481,16 @@ class AmbientSoundscape {
     const baseFreq = 4400 + (Math.random() * 400 - 200);
     const panX = (Math.random() * 2 - 1) * 0.65; // Stereo spread
 
-    let panner = null;
-    if (this.ctx.createStereoPanner) {
-      panner = this.ctx.createStereoPanner();
-      panner.pan.setValueAtTime(panX, this.ctx.currentTime);
-      panner.connect(this.cricketGain);
+    // Reuse one persistent panner; just re-target the pan (no per-burst leak)
+    if (this.ctx.createStereoPanner && !this._cricketPanner) {
+      this._cricketPanner = this.ctx.createStereoPanner();
+      this._cricketPanner.connect(this.cricketGain);
+    }
+    if (this._cricketPanner) {
+      this._cricketPanner.pan.setValueAtTime(panX, this.ctx.currentTime);
     }
 
-    const outputNode = panner || this.cricketGain;
+    const outputNode = this._cricketPanner || this.cricketGain;
 
     const pulseDuration = 0.038;
     const pulseGap = 0.024;
@@ -507,6 +522,18 @@ class AmbientSoundscape {
       osc2.connect(hGain);
       hGain.connect(pGain);
       pGain.connect(outputNode);
+
+      // Auto-disconnect on ended so short-lived oscs never accumulate
+      const cleanup = () => {
+        try {
+          osc1.disconnect();
+          osc2.disconnect();
+          pGain.disconnect();
+          hGain.disconnect();
+        } catch {}
+      };
+      osc1.onended = cleanup;
+      osc2.onended = cleanup;
 
       osc1.start(pStart);
       osc1.stop(pEnd);
@@ -692,21 +719,31 @@ class AmbientSoundscape {
     bodyFilter.connect(bodyGain);
     bodyGain.connect(this.sfxBus);
 
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        bodyFilter.disconnect();
+        bodyGain.disconnect();
+      } catch {}
+    };
     osc.start(t);
     osc.stop(t + 0.06);
 
-    // --- Layer 2: short tactile "tick" (filtered noise, lowpassed, very quiet) ---
+    // --- Layer 2: short tactile "tick" (pooled filtered noise, very quiet) ---
     const tickDur = 0.014;
-    const tickSize = Math.max(16, Math.floor(this.ctx.sampleRate * tickDur));
-    const tickBuf = this.ctx.createBuffer(1, tickSize, this.ctx.sampleRate);
-    const tickData = tickBuf.getChannelData(0);
-    for (let i = 0; i < tickSize; i++) {
-      const env = Math.exp(-i / (tickSize * 0.3));
-      tickData[i] = (Math.random() * 2 - 1) * env;
+    if (!this._tickBuffer || this._tickBuffer.sampleRate !== this.ctx.sampleRate) {
+      const tickSize = Math.max(16, Math.floor(this.ctx.sampleRate * tickDur));
+      const buf = this.ctx.createBuffer(1, tickSize, this.ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < tickSize; i++) {
+        const env = Math.exp(-i / (tickSize * 0.3));
+        d[i] = (Math.random() * 2 - 1) * env;
+      }
+      this._tickBuffer = buf;
     }
 
     const tick = this.ctx.createBufferSource();
-    tick.buffer = tickBuf;
+    tick.buffer = this._tickBuffer;
 
     const tickFilter = this.ctx.createBiquadFilter();
     tickFilter.type = 'lowpass';
@@ -722,6 +759,13 @@ class AmbientSoundscape {
     tickFilter.connect(tickGain);
     tickGain.connect(this.sfxBus);
 
+    tick.onended = () => {
+      try {
+        tick.disconnect();
+        tickFilter.disconnect();
+        tickGain.disconnect();
+      } catch {}
+    };
     tick.start(t);
   }
 
@@ -746,6 +790,12 @@ class AmbientSoundscape {
     osc.connect(gain);
     gain.connect(this.sfxBus);
 
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch {}
+    };
     osc.start(t);
     osc.stop(t + 0.09);
   }
@@ -755,15 +805,19 @@ class AmbientSoundscape {
     if (!this.ctx || !this.sfxBus) return;
 
     const t = this.ctx.currentTime;
-    const bufferSize = Math.floor(this.ctx.sampleRate * 0.16);
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.sin((Math.PI * i) / bufferSize);
+    // Pool the 0.16s swoosh envelope buffer (identical bytes every call)
+    if (!this._swooshBuffer || this._swooshBuffer.sampleRate !== this.ctx.sampleRate) {
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.16);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.sin((Math.PI * i) / bufferSize);
+      }
+      this._swooshBuffer = buffer;
     }
 
     const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = this._swooshBuffer;
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
@@ -779,6 +833,13 @@ class AmbientSoundscape {
     filter.connect(gain);
     gain.connect(this.sfxBus);
 
+    noise.onended = () => {
+      try {
+        noise.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch {}
+    };
     noise.start(t);
   }
 
@@ -786,19 +847,28 @@ class AmbientSoundscape {
     this.ensureContext();
     if (!this.ctx || !this.sfxBus) return;
 
+    // Pre-build a small pool of decay envelopes once; pick per pop (same sound)
+    if (this._burstBuffers.length === 0) {
+      for (let b = 0; b < 4; b++) {
+        const dur = 0.04 + b * 0.015;
+        const size = Math.floor(this.ctx.sampleRate * dur);
+        const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < size; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (size * 0.25));
+        }
+        this._burstBuffers.push(buf);
+      }
+    }
     // Cascading crackle pops simulating stirred coals and flying embers
     for (let p = 0; p < 8; p++) {
       const delay = p * (24 + Math.random() * 38);
-      setTimeout(() => {
+      const burstIdx = p % this._burstBuffers.length;
+      const burstTimer = setTimeout(() => {
         if (!this.ctx || !this.sfxBus) return;
         const t = this.ctx.currentTime;
-        const dur = 0.04 + Math.random() * 0.05;
-        const bufferSize = Math.floor(this.ctx.sampleRate * dur);
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
-        }
+        const buffer = this._burstBuffers[burstIdx];
+        const dur = buffer.duration;
 
         const noise = this.ctx.createBufferSource();
         noise.buffer = buffer;
@@ -819,8 +889,16 @@ class AmbientSoundscape {
         filter.connect(gain);
         gain.connect(this.sfxBus);
 
+        noise.onended = () => {
+          try {
+            noise.disconnect();
+            filter.disconnect();
+            gain.disconnect();
+          } catch {}
+        };
         noise.start(t);
       }, delay);
+      this.intervals.push(burstTimer);
     }
   }
 }

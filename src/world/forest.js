@@ -281,10 +281,10 @@ const SHRUB_PALETTE = [
   new THREE.Color(0x2d5540)  // Highland mossy bush
 ];
 
-function pickColor(palette, x, z, y) {
+function pickColor(palette, x, z, y, out) {
   const hash = Math.sin(x * 12.9898 + z * 78.233 + y * 37.719) * 43758.5453;
   const idx = Math.floor(Math.abs(hash) % palette.length);
-  const baseCol = palette[idx].clone();
+  const baseCol = out.copy(palette[idx]);
   // Subtle organic lightness shift
   const shift = ((hash - Math.floor(hash)) - 0.5) * 0.08;
   baseCol.offsetHSL(0, 0, shift);
@@ -443,6 +443,21 @@ export function createForest(scene) {
     let attempts = 0;
     const maxAttempts = arch.count * 25;
     const clearingQuota = Math.round(arch.count * 0.009);
+    // Memoize valley elevation per quantized (x,z) — placement probes revisit
+    // nearby coordinates across archetypes and margin checks
+    const elevCache = new Map();
+    const cachedElevation = (x, z) => {
+      const key = `${Math.round(x * 2)}:${Math.round(z * 2)}`;
+      let v = elevCache.get(key);
+      if (v === undefined) {
+        v = getValleyElevation(x, z);
+        elevCache.set(key, v);
+      }
+      return v;
+    };
+    const tmpColor = new THREE.Color();
+    const tmpMatrix = new THREE.Matrix4();
+    const tmpCol = new THREE.Color();
 
     while (placed < arch.count && attempts < maxAttempts) {
       attempts++;
@@ -473,7 +488,7 @@ export function createForest(scene) {
         if (Math.random() > 0.15) continue;
       }
 
-      const yElevation = getValleyElevation(x, z);
+      const yElevation = cachedElevation(x, z);
       const scaleRange = arch.scaleMax - arch.scaleMin;
       const s = arch.scaleMin + Math.random() * scaleRange;
 
@@ -487,11 +502,14 @@ export function createForest(scene) {
       dummy.scale.set(s, s * (0.92 + Math.random() * 0.25), s);
       dummy.updateMatrix();
 
-      const col = pickColor(arch.palette, x, z, yElevation);
+      const col = pickColor(arch.palette, x, z, yElevation, tmpColor);
       const sector = getSectorIndex(x, z);
 
-      sectorInstances[sector][archIdx].matrices.push(dummy.matrix.clone());
-      sectorInstances[sector][archIdx].colors.push(col.clone());
+      // Copy values instead of cloning heap objects per instance
+      tmpMatrix.copy(dummy.matrix);
+      tmpCol.copy(col);
+      sectorInstances[sector][archIdx].matrices.push(tmpMatrix.clone());
+      sectorInstances[sector][archIdx].colors.push(tmpCol.clone());
 
       placed++;
     }

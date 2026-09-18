@@ -246,11 +246,13 @@ function createAlpineMassifMesh(p, idx) {
   const cRockLedge  = new THREE.Color(0x486082); // Weathered talus shelf
   const cBaseEarth  = new THREE.Color(0x152534); // Subalpine dark spruce earth / valley transition
   const cFarHaze    = new THREE.Color(0x2d3e64); // Atmospheric depth horizon haze
+  const cCrestHi    = new THREE.Color(0xf2f8ff); // Frosty crest highlight (hoisted: was allocated per-face)
 
   // Distance from summit overlook for aerial perspective
   const dist = Math.hypot(p.x - 14, p.z - 17);
   const tDist = Math.max(0, Math.min(1, (dist - 80) / (240 - 80)));
 
+  // Reused temporaries (module-scope per call, zero per-face allocation)
   const p0 = new THREE.Vector3();
   const p1 = new THREE.Vector3();
   const p2 = new THREE.Vector3();
@@ -300,7 +302,7 @@ function createAlpineMassifMesh(p, idx) {
         faceColor.copy(cSnowShadow).lerp(cSnowLit, moonLitFactor);
         // Frosty crest highlight near top
         if (altT > 0.86) {
-          faceColor.lerp(new THREE.Color(0xf2f8ff), 0.35);
+          faceColor.lerp(cCrestHi, 0.35);
         }
       }
     } else if (p.hasSnow && altT > snowLine - 0.10 && slope > 0.52 && hFacet > 0.50) {
@@ -349,13 +351,13 @@ function createAlpineMassifMesh(p, idx) {
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
   // Pre-transform geometry with world position, rotation, and scaling
-  const m = new THREE.Matrix4();
+  // Reused compose temporaries (no per-peak allocation)
   const rotY = p.rot !== undefined ? p.rot : ((idx * 47) % 314) / 100;
-  m.compose(
-    new THREE.Vector3(p.x, 0, p.z),
-    new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotY),
-    new THREE.Vector3(p.scaleX || 1.0, 1.0, p.scaleZ || 1.0)
-  );
+  const _mPos = new THREE.Vector3(p.x, 0, p.z);
+  const _mQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
+  const _mScale = new THREE.Vector3(p.scaleX || 1.0, 1.0, p.scaleZ || 1.0);
+  const m = new THREE.Matrix4();
+  m.compose(_mPos, _mQuat, _mScale);
   geo.applyMatrix4(m);
 
   return geo;
@@ -450,14 +452,17 @@ export function createMountain(scene) {
     { x: 0.6, y: 7.0, z: 4.3, s: 0.85, rx: 2.01, ry: 5.25 }
   ];
 
+  const _rockPos = new THREE.Vector3();
+  const _rockQuat = new THREE.Quaternion();
+  const _rockEuler = new THREE.Euler();
+  const _rockScale = new THREE.Vector3();
   const rockGeos = rockPositions.map(r => {
     const g = rockGeo.clone();
     const rm = new THREE.Matrix4();
-    rm.compose(
-      new THREE.Vector3(r.x, r.y, r.z),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(r.rx, r.ry, 0)),
-      new THREE.Vector3(r.s, r.s * 0.8, r.s * 1.1)
-    );
+    _rockPos.set(r.x, r.y, r.z);
+    _rockQuat.setFromEuler(_rockEuler.set(r.rx, r.ry, 0));
+    _rockScale.set(r.s, r.s * 0.8, r.s * 1.1);
+    rm.compose(_rockPos, _rockQuat, _rockScale);
     g.applyMatrix4(rm);
     return g;
   });

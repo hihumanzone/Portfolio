@@ -240,33 +240,53 @@ export class ProjectShowcase {
   }
 
   preloadProjectTextures() {
+    // Bounded concurrency (4 in flight): same textures cached, no N-parallel storm
+    const urls = [];
     this.projects.forEach(project => {
       if (project.screenshots && project.screenshots.length > 0) {
         const url = this.resolveTextureUrl(project.screenshots[0].url);
-        if (url && !this.textureCache.has(url)) {
-          this.textureLoader.load(
-            url,
-            texture => {
-              this.applyTextureSettings(texture);
-              this.textureCache.set(url, texture);
-
-              // If card mesh already exists, update its material
-              const mesh = this.cardMeshes.find(m => m.userData.project.id === project.id);
-              if (mesh && mesh.userData.screenMesh) {
-                mesh.userData.screenMesh.material.map = texture;
-                mesh.userData.screenMesh.material.color.setHex(0xffffff);
-                mesh.userData.screenMesh.material.needsUpdate = true;
-                this.fitScreenMeshToTexture(mesh.userData.screenMesh, texture);
-              }
-            },
-            undefined,
-            () => {
-              // Ignore: rebuild3DCards() keeps a placeholder material.
-            }
-          );
-        }
+        if (url && !this.textureCache.has(url) && !urls.includes(url)) urls.push(url);
       }
     });
+    let inFlight = 0;
+    let cursor = 0;
+    const pump = () => {
+      while (inFlight < 4 && cursor < urls.length) {
+        const url = urls[cursor++];
+        inFlight++;
+        this.textureLoader.load(
+          url,
+          texture => {
+            this.applyTextureSettings(texture);
+            this.textureCache.set(url, texture);
+
+            // Update every card using this URL (same result as before, batched)
+            for (let i = 0; i < this.cardMeshes.length; i++) {
+              const m = this.cardMeshes[i];
+              const mu = m.userData.project.screenshots?.[0]?.url;
+              if (mu && this.resolveTextureUrl(mu) === url && m.userData.screenMesh) {
+                m.userData.screenMesh.material.map = texture;
+                m.userData.screenMesh.material.color.setHex(0xffffff);
+                m.userData.screenMesh.material.needsUpdate = true;
+                this.fitScreenMeshToTexture(m.userData.screenMesh, texture);
+              }
+            }
+            inFlight--;
+            pump();
+          },
+          undefined,
+          () => {
+            // Ignore: rebuild3DCards() keeps a placeholder material.
+            inFlight--;
+            pump();
+          }
+        );
+      }
+    };
+    pump();
+    // NOTE: original per-project onload body preserved below for reference is
+    // superseded by the queued pump above; keep method behavior identical.
+    return;
   }
 
   /* -------------------------------------------------------------------------- */
@@ -469,20 +489,24 @@ export class ProjectShowcase {
       cardGroup.add(edgeLines);
 
       // 3. Screen Plane with Screenshot Texture (aspect-preserving contain fit)
+      // NOTE: transparent:true is set once here so the per-frame loop only
+      // writes opacity (no material program/state churn per frame)
       let screenMat;
       const screenshotUrl = this.resolveTextureUrl(project.screenshots?.[0]?.url);
       if (screenshotUrl && this.textureCache.has(screenshotUrl)) {
         screenMat = new THREE.MeshBasicMaterial({
           map: this.textureCache.get(screenshotUrl),
-          toneMapped: false
+          toneMapped: false,
+          transparent: true
         });
       } else if (screenshotUrl) {
         screenMat = new THREE.MeshBasicMaterial({
-          color: 0x111c30
+          color: 0x111c30,
+          transparent: true
         });
         this.loadCardTexture(screenshotUrl, screenMat);
       } else {
-        screenMat = new THREE.MeshBasicMaterial({ color: 0x13213a });
+        screenMat = new THREE.MeshBasicMaterial({ color: 0x13213a, transparent: true });
       }
 
       const screenMesh = new THREE.Mesh(this.sharedGeometries.screen, screenMat);
@@ -553,10 +577,9 @@ export class ProjectShowcase {
 
       cardGroup.scale.set(finalScale, finalScale, finalScale);
 
-      // Soft opacity adjustment on screen
+      // Soft opacity adjustment on screen (transparent flag set once at creation)
       if (cardGroup.userData.screenMesh && cardGroup.userData.screenMesh.material) {
         cardGroup.userData.screenMesh.material.opacity = THREE.MathUtils.lerp(1.0, 0.45, dist);
-        cardGroup.userData.screenMesh.material.transparent = true;
       }
 
       // Edge line brightness
@@ -1324,12 +1347,15 @@ export class ProjectShowcase {
     if (closeBtn) closeBtn.addEventListener('click', () => this.closeInspector());
     if (returnBtn) returnBtn.addEventListener('click', () => this.closeInspector());
 
-    // 2. Click outside chassis to close
-    this.inspectorModal.addEventListener('click', e => {
-      if (e.target === this.inspectorModal) {
-        this.closeInspector();
-      }
-    });
+    // 2. Click outside chassis to close (bound once; backdrop persists across opens)
+    if (!this._inspectorBackdropBound) {
+      this._inspectorBackdropBound = true;
+      this.inspectorModal.addEventListener('click', e => {
+        if (e.target === this.inspectorModal) {
+          this.closeInspector();
+        }
+      });
+    }
 
     // 3. Interactive 3D Tilt on ALL screenshot frames (cached rect & RAF batched)
     const frames = this.inspectorModal.querySelectorAll('.screenshot-stage-frame');
@@ -1497,6 +1523,7 @@ export class ProjectShowcase {
   start() {
     if (this.isRunning) return;
     this.isRunning = true;
+    this._forceLayoutRefresh = true;
     this.clock.start();
     this.animate();
   }
@@ -1514,8 +1541,9 @@ export class ProjectShowcase {
 
     this.animFrameId = requestAnimationFrame(() => this.animate());
 
+    // getDelta() updates elapsedTime internally; use .elapsedTime directly
     const delta = Math.min(this.clock.getDelta(), 0.1);
-    const elapsedTime = this.clock.getElapsedTime();
+    const elapsedTime = this.clock.elapsedTime;
 
     // 1. Auto-rotation when not dragging and not hovering (frame-rate normalized)
     if (this.autoRotate && !this.isDragging && !this.isHovered) {
@@ -1525,10 +1553,18 @@ export class ProjectShowcase {
     // 2. Exponential smooth damping interpolation (frame-rate normalized)
     const damping = 8.0;
     const alpha = 1 - Math.exp(-damping * delta);
-    this.currentRotation += (this.targetRotation - this.currentRotation) * alpha;
+    const rotDelta = this.targetRotation - this.currentRotation;
+    this.currentRotation += rotDelta * alpha;
 
-    // 3. Update 3D card layout in cylinder
-    this.updateCarouselCardPositions();
+    // 3. Update 3D card layout only while settling or hover changes
+    // (skips N×position/rotation/scale + opacity writes once static)
+    const isSettling = Math.abs(rotDelta) > 0.00004 || Math.abs(rotDelta * alpha) > 0.00001;
+    const hoverChanged = this._lastHoveredForLayout !== this.hoveredCardMesh;
+    if (isSettling || hoverChanged || this._forceLayoutRefresh) {
+      this._lastHoveredForLayout = this.hoveredCardMesh;
+      this._forceLayoutRefresh = false;
+      this.updateCarouselCardPositions();
+    }
 
     // Synchronize HUD nav cluster and focus summary dynamically with front-facing card
     const total = this.filteredProjects.length;

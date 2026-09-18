@@ -612,6 +612,8 @@ export function createCampfire(scene) {
 
   sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
   sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkColors, 3));
+  sparkGeo.attributes.position.setUsage(THREE.DynamicDrawUsage);
+  sparkGeo.attributes.color.setUsage(THREE.DynamicDrawUsage);
 
   const sparkMat = new THREE.PointsMaterial({
     size: 0.045,
@@ -651,6 +653,8 @@ export function createCampfire(scene) {
 
   emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPositions, 3));
   emberGeo.setAttribute('color', new THREE.BufferAttribute(emberColors, 3));
+  emberGeo.attributes.position.setUsage(THREE.DynamicDrawUsage);
+  emberGeo.attributes.color.setUsage(THREE.DynamicDrawUsage);
 
   const emberMat = new THREE.PointsMaterial({
     size: 0.055,
@@ -812,12 +816,14 @@ export function createCampfire(scene) {
         }
       }
 
-      // Campfire Point Lights
+      // Campfire Point Lights (deterministic hash flicker: same amplitude as
+      // Math.random(), but branch-free and stable frame-to-frame)
+      const hashFlicker = Math.sin(time * 47.3) * 0.5 + Math.sin(time * 31.7 + 1.7) * 0.5;
       fireLight.intensity =
         4.8 +
         Math.sin(time * 15.0) * 0.55 +
         Math.cos(time * 24.0) * 0.35 +
-        (Math.random() - 0.5) * 0.25 +
+        hashFlicker * 0.125 +
         burstLightBonus;
 
       fireCoreLight.intensity = 2.4 + Math.sin(time * 18.0) * 0.35 + burstLightBonus * 0.5;
