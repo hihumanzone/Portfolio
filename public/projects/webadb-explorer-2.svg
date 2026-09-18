@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f1d" />
+      <stop offset="50%" stop-color="#0e172a" />
+      <stop offset="100%" stop-color="#060913" />
+    </linearGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <linearGradient id="amberGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+    <linearGradient id="greenGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <pattern id="gridPattern" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+  <rect width="1280" height="720" fill="url(#gridPattern)" />
+
+  <!-- App Window Frame -->
+  <rect x="24" y="24" width="1232" height="672" rx="12" fill="#0b111e" stroke="rgba(120, 188, 235, 0.22)" stroke-width="1.5" />
+
+  <!-- Window Titlebar -->
+  <rect x="24" y="24" width="1232" height="46" rx="12" fill="#080c16" />
+  <rect x="24" y="58" width="1232" height="12" fill="#080c16" />
+  <line x1="24" y1="70" x2="1256" y2="70" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+
+  <!-- Window Dots -->
+  <circle cx="48" cy="47" r="6" fill="#ef4444" />
+  <circle cx="68" cy="47" r="6" fill="#f59e0b" />
+  <circle cx="88" cy="47" r="6" fill="#10b981" />
+
+  <!-- Titlebar text -->
+  <text x="120" y="52" font-family="'Fira Code', monospace" font-size="13" font-weight="600" fill="#94a3b8" letter-spacing="1">WEBADB_EXPLORER // REAL-TIME LOGCAT BUFFER</text>
+  <text x="640" y="52" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Hardware-Accelerated Android System Log Streaming via WebUSB Interface</text>
+
+  <!-- Titlebar Badge -->
+  <rect x="1100" y="37" width="136" height="22" rx="11" fill="#10b98122" stroke="#10b98188" stroke-width="1" />
+  <text x="1168" y="52" font-family="'Fira Code', monospace" font-size="10" font-weight="600" fill="#10b981" text-anchor="middle">STREAMING</text>
+
+  <!-- Main Viewport Content -->
+  <g transform="translate(24, 70)">
+    
+    <g transform="translate(30, 20)">
+      <rect x="0" y="0" width="1160" height="540" rx="10" fill="#070c18" stroke="rgba(16, 185, 129, 0.3)" />
+      <text x="24" y="36" font-family="'Fira Code', monospace" font-size="13" font-weight="700" fill="#10b981">LOGCAT STREAM // FILTER: [ActivityManager|HardwareRenderer|AudioFlinger]</text>
+
+      <g transform="translate(24, 70)">
+        <text x="0" y="30" font-family="'Fira Code', monospace" font-size="11" fill="#38bdf8">09:42:10.112  1280  1340 I ActivityManager: Displayed com.android.chrome: +114ms</text>
+        <text x="0" y="65" font-family="'Fira Code', monospace" font-size="11" fill="#10b981">09:42:10.220  2400  2450 D HardwareRenderer: Loaded Vulkan pipeline cache (3,412 shaders)</text>
+        <text x="0" y="100" font-family="'Fira Code', monospace" font-size="11" fill="#94a3b8">09:42:10.340  1040  1080 V AudioFlinger: MixerThread 0xb4000078 active tracks: 1</text>
+        <text x="0" y="135" font-family="'Fira Code', monospace" font-size="11" fill="#f59e0b">09:42:10.450  1500  1520 W PowerManagerService: Screen dim timeout deferred by active touch</text>
+        <text x="0" y="170" font-family="'Fira Code', monospace" font-size="11" fill="#10b981">09:42:10.590  2400  2450 I WebADB: Buffer sync flushed 64 KB over WebUSB bulk endpoint</text>
+      </g>
+    </g>
+    
+  </g>
+
+  <!-- Subtle CRT Scanline overlay effect -->
+  <line x1="24" y1="24" x2="1256" y2="24" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+</svg>

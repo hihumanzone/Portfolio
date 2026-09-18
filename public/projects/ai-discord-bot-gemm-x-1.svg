@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f1d" />
+      <stop offset="50%" stop-color="#0e172a" />
+      <stop offset="100%" stop-color="#060913" />
+    </linearGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <linearGradient id="amberGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+    <linearGradient id="greenGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <pattern id="gridPattern" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+  <rect width="1280" height="720" fill="url(#gridPattern)" />
+
+  <!-- App Window Frame -->
+  <rect x="24" y="24" width="1232" height="672" rx="12" fill="#0b111e" stroke="rgba(120, 188, 235, 0.22)" stroke-width="1.5" />
+
+  <!-- Window Titlebar -->
+  <rect x="24" y="24" width="1232" height="46" rx="12" fill="#080c16" />
+  <rect x="24" y="58" width="1232" height="12" fill="#080c16" />
+  <line x1="24" y1="70" x2="1256" y2="70" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+
+  <!-- Window Dots -->
+  <circle cx="48" cy="47" r="6" fill="#ef4444" />
+  <circle cx="68" cy="47" r="6" fill="#f59e0b" />
+  <circle cx="88" cy="47" r="6" fill="#10b981" />
+
+  <!-- Titlebar text -->
+  <text x="120" y="52" font-family="'Fira Code', monospace" font-size="13" font-weight="600" fill="#94a3b8" letter-spacing="1">GEMM_X // MULTI-PROVIDER AUTONOMOUS AGENT</text>
+  <text x="640" y="52" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Imagen-3 Image Generation • MusicLM Synthesis • Multi-Provider Model Routing</text>
+
+  <!-- Titlebar Badge -->
+  <rect x="1100" y="37" width="136" height="22" rx="11" fill="#818cf822" stroke="#818cf888" stroke-width="1" />
+  <text x="1168" y="52" font-family="'Fira Code', monospace" font-size="10" font-weight="600" fill="#818cf8" text-anchor="middle">MULTI-AI</text>
+
+  <!-- Main Viewport Content -->
+  <g transform="translate(24, 70)">
+    
+    <g transform="translate(30, 20)">
+      <!-- Discord Card Style -->
+      <rect x="0" y="0" width="1160" height="540" rx="12" fill="#0f172a" stroke="rgba(129, 140, 248, 0.3)" />
+      
+      <g transform="translate(40, 30)">
+        <text x="0" y="20" font-family="'Fira Code', monospace" font-size="13" fill="#818cf8">/generate-concept-art prompt: "solitary timber cabin on snowy mountain summit under aurora borealis"</text>
+
+        <!-- Output Art Card -->
+        <g transform="translate(0, 50)">
+          <rect x="0" y="0" width="640" height="380" rx="10" fill="#060913" stroke="rgba(255, 255, 255, 0.15)" />
+          
+          <!-- Vector Art Preview -->
+          <rect x="10" y="10" width="620" height="360" rx="8" fill="#0a1226" />
+          <path d="M 10 320 L 160 220 L 320 280 L 480 180 L 630 330 Z" fill="#1e293b" />
+          <polygon points="320,190 300,240 340,240" fill="#f59e0b" />
+          <circle cx="500" cy="80" r="30" fill="#38bdf8" opacity="0.4" filter="url(#glow)" />
+          <path d="M 40 70 Q 240 30, 440 90 T 600 50" fill="none" stroke="#10b981" stroke-width="6" opacity="0.6" filter="url(#glow)" />
+          
+          <text x="30" y="40" font-family="'Fira Code', monospace" font-size="11" fill="#38bdf8">IMAGEN 3 // 2048 × 2048 ULTRA-RES</text>
+        </g>
+
+        <!-- Right: Multi-Agent Voice Synthesis & Music -->
+        <g transform="translate(680, 50)">
+          <rect x="0" y="0" width="440" height="180" rx="10" fill="#0b1322" stroke="rgba(56, 189, 248, 0.25)" />
+          <text x="24" y="32" font-family="'Fira Code', monospace" font-size="12" font-weight="700" fill="#38bdf8">SYNTHESIZED AMBIENT AUDIO</text>
+          
+          <!-- Audio Waveform -->
+          <path d="M 24 100 Q 80 40, 140 100 T 260 100 T 380 100" fill="none" stroke="#818cf8" stroke-width="3" />
+          <text x="24" y="150" font-family="'Fira Code', monospace" font-size="11" fill="#94a3b8">Model: MusicLM Ambient Chill • 44.1 kHz</text>
+
+          <rect x="0" y="200" width="440" height="180" rx="10" fill="#0b1322" stroke="rgba(16, 185, 129, 0.25)" />
+          <text x="24" y="232" font-family="'Fira Code', monospace" font-size="12" font-weight="700" fill="#10b981">AUTONOMOUS FAILOVER ROUTER</text>
+          <text x="24" y="265" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#e2e8f0">Primary: Gemini 2.0 Flash (Online)</text>
+          <text x="24" y="295" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#94a3b8">Secondary: Claude 3.5 Sonnet (Standby)</text>
+          <text x="24" y="325" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#94a3b8">Tertiary: Local Ollama Llama-3 (Fallback)</text>
+          <text x="24" y="355" font-family="'Fira Code', monospace" font-size="11" fill="#10b981">Uptime: 99.98% Across 180,000 Messages</text>
+        </g>
+      </g>
+    </g>
+    
+  </g>
+
+  <!-- Subtle CRT Scanline overlay effect -->
+  <line x1="24" y1="24" x2="1256" y2="24" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+</svg>

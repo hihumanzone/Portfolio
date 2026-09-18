@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Riddhiman Kundal — 3D Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Preloader -->
+    <div id="preloader" class="preloader">
+      <div class="preloader-content">
+        <div class="lantern-icon">
+          <div class="lantern-glow"></div>
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 2h4M12 2v3M8 5h8l-1 14H9L8 5zM9 19h6M7 22h10M12 9v6M10 12h4" />
+          </svg>
+        </div>
+        <div class="preloader-title">ASCENDING MOUNTAIN SUMMIT...</div>
+        <div class="preloader-sub">Compiling low-poly world & shaders</div>
+      </div>
+    </div>
+
+    <!-- WebGL Canvas Mount -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer" class="ui-layer">
+      <!-- Top Navigation & Status -->
+      <header class="top-bar">
+        <div class="brand-group">
+          <span class="brand-name">RIDDHIMAN KUNDAL</span>
+          <span class="brand-tag">@hihumanzone</span>
+          <span class="brand-role">FULL-STACK & AI SYSTEMS ENGINEER</span>
+        </div>
+
+        <div class="actions-group">
+          <div class="audio-control-cluster">
+            <button id="audio-toggle" class="hud-btn audio-btn" aria-label="Toggle ambient night sound">
+              <span class="audio-icon-wrap">
+                <span class="btn-icon">🔊</span>
+              </span>
+              <span class="audio-status">AUDIO: MUTED</span>
+            </button>
+            <div id="audio-volume-panel" class="audio-volume-panel">
+              <span class="vol-icon" aria-hidden="true">🔈</span>
+              <input id="audio-volume-slider" type="range" min="0" max="100" value="80" class="hud-volume-slider" aria-label="Master audio volume" />
+              <span id="audio-volume-label" class="audio-volume-label">80%</span>
+            </div>
+            <button id="audio-mix-btn" class="hud-btn audio-btn mix-btn" aria-label="Open ambient audio mixer" aria-expanded="false">
+              <span class="btn-icon">🎚️</span>
+              <span class="mix-btn-label">MIX</span>
+            </button>
+            <div id="audio-mixer-panel" class="audio-mixer-panel hidden">
+              <div class="mixer-header">AMBIENT MIXER // LAYER BALANCE</div>
+              <label class="mixer-row" for="layer-wind-slider">
+                <span class="mixer-name">WIND</span>
+                <input id="layer-wind-slider" type="range" min="0" max="100" value="100" class="hud-volume-slider mixer-slider" data-layer="wind" aria-label="Wind volume" />
+                <span id="layer-wind-label" class="audio-volume-label mixer-label">100%</span>
+              </label>
+              <label class="mixer-row" for="layer-river-slider">
+                <span class="mixer-name">RIVER</span>
+                <input id="layer-river-slider" type="range" min="0" max="100" value="100" class="hud-volume-slider mixer-slider" data-layer="river" aria-label="River volume" />
+                <span id="layer-river-label" class="audio-volume-label mixer-label">100%</span>
+              </label>
+              <label class="mixer-row" for="layer-fire-slider">
+                <span class="mixer-name">FIRE</span>
+                <input id="layer-fire-slider" type="range" min="0" max="100" value="100" class="hud-volume-slider mixer-slider" data-layer="fire" aria-label="Campfire volume" />
+                <span id="layer-fire-label" class="audio-volume-label mixer-label">100%</span>
+              </label>
+              <label class="mixer-row" for="layer-cricket-slider">
+                <span class="mixer-name">CRICKETS</span>
+                <input id="layer-cricket-slider" type="range" min="0" max="100" value="100" class="hud-volume-slider mixer-slider" data-layer="cricket" aria-label="Cricket volume" />
+                <span id="layer-cricket-label" class="audio-volume-label mixer-label">100%</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </header>
+
+
+      <!-- 3D Raycast Object Hover Tooltip -->
+      <div id="object-tooltip" class="object-tooltip hidden">
+        <span class="tooltip-icon">✦</span>
+        <span id="tooltip-text">Click to inspect</span>
+      </div>
+
+      <!-- Toast Notification -->
+      <div id="toast" class="toast hidden">
+        <span id="toast-message">Copied to clipboard</span>
+      </div>
+
+      <!-- Bottom Cinematic Waypoint Navigation Dock -->
+      <nav class="bottom-dock dock-pos-0" aria-label="Waypoint Navigation">
+        <button class="dock-btn active" data-waypoint="0">
+          <span class="btn-index">01</span>
+          <span class="btn-title">SUMMIT</span>
+        </button>
+        <button class="dock-btn" data-waypoint="1">
+          <span class="btn-index">02</span>
+          <span class="btn-title">CABIN DESK</span>
+        </button>
+        <button class="dock-btn" data-waypoint="2">
+          <span class="btn-index">03</span>
+          <span class="btn-title">CAMPFIRE</span>
+        </button>
+        <button class="dock-btn" data-waypoint="3">
+          <span class="btn-index">04</span>
+          <span class="btn-title">SIGNAL TOWER</span>
+        </button>
+      </nav>
+
+      <!-- Bottom Hint -->
+      <div class="interaction-hint">
+        <span>Click waypoints, click 3D objects, or move mouse to tilt cinematic camera</span>
+      </div>
+    </div>
+
+    <!-- MODAL 1: Cabin CRT Workstation & Project Showcase -->
+    <div id="terminal-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="crt-chassis">
+        <div class="crt-scanlines"></div>
+        <div class="crt-bezel">
+          <header class="crt-header">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="terminal-title">RIDDHIMAN_OS // CABIN WORKSTATION v2.4</div>
+            <button class="modal-close-btn" data-close="terminal-modal" aria-label="Close Workstation">&times;</button>
+          </header>
+
+          <nav class="crt-tabs">
+            <button class="tab-btn active" data-tab="projects">01_PROJECTS</button>
+            <button class="tab-btn" data-tab="skills">02_TECH_MATRIX</button>
+            <button class="tab-btn" data-tab="cli">03_INTERACTIVE_CLI</button>
+          </nav>
+
+          <div class="crt-content">
+            <!-- TAB 1: Flagship Projects Showcase -->
+            <div class="tab-pane active" id="tab-projects">
+              <!-- Showcase Controls Header: Search, View Mode Toggle -->
+              <div class="showcase-toolbar">
+                <div class="showcase-search-box">
+                  <span class="search-icon" aria-hidden="true">⌕</span>
+                  <input type="text" id="project-search-input" class="project-search-input" placeholder="Search projects by name, technology, or tag..." autocomplete="off" spellcheck="false" />
+                  <button id="search-clear-btn" class="search-clear-btn hidden" aria-label="Clear search query">&times;</button>
+                </div>
+                <div class="showcase-view-controls">
+                  <div class="view-mode-toggle" role="group" aria-label="Showcase View Mode">
+                    <button class="view-toggle-btn active" data-view="3d" title="3D Holo-Deck View">
+                      <span class="view-icon">✦</span>
+                      <span class="view-label">3D STAGE</span>
+                    </button>
+                    <button class="view-toggle-btn" data-view="grid" title="Tactical Grid View">
+                      <span class="view-icon">☷</span>
+                      <span class="view-label">GRID</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEW 1: 3D Holo-Deck Spatial Carousel -->
+              <div id="showcase-3d-container" class="showcase-3d-container">
+                <div class="stage-viewport-wrapper">
+                  <canvas id="projects-3d-canvas" class="projects-3d-canvas"></canvas>
+                  <div class="stage-overlay-vignette" aria-hidden="true"></div>
+
+                  <!-- 3D Stage Navigation Controls Cluster -->
+                  <div class="stage-nav-cluster">
+                    <button id="stage-prev-btn" class="stage-nav-btn" aria-label="Previous Project" title="Previous Project [←]">‹</button>
+                    <div class="stage-project-indicator" id="stage-project-indicator">
+                      <span id="stage-current-idx">01</span> / <span id="stage-total-count">08</span>
+                    </div>
+                    <button id="stage-next-btn" class="stage-nav-btn" aria-label="Next Project" title="Next Project [→]">›</button>
+                    <button id="stage-autoplay-btn" class="stage-control-btn" title="Toggle 3D Auto-Rotation">
+                      <span class="btn-icon">▶</span>
+                      <span class="btn-text">AUTO</span>
+                    </button>
+                  </div>
+
+                  <!-- 3D Stage Gestures Hint -->
+                  <div class="stage-gesture-hint">
+                    <span>Drag to rotate 3D deck • Scroll or click card to inspect</span>
+                  </div>
+                </div>
+
+                <!-- Active Project Card Focus Summary (Under 3D Stage) -->
+                <div id="stage-focus-summary" class="stage-focus-summary">
+                  <!-- Dynamically populated for currently active/hovered 3D card -->
+                </div>
+              </div>
+
+              <!-- VIEW 2: Tactical Filterable Grid (Hidden by default) -->
+              <div id="showcase-grid-container" class="showcase-grid-container hidden">
+                <div class="projects-grid">
+                  <!-- Dynamically loaded project cards with 3D tilt -->
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: Tech Matrix -->
+            <div class="tab-pane" id="tab-skills">
+              <div class="skills-wrapper">
+                <!-- Dynamically loaded from src/content.json -->
+              </div>
+            </div>
+
+            <!-- TAB 3: Interactive CLI Terminal -->
+            <div class="tab-pane" id="tab-cli">
+              <div class="cli-container">
+                <div class="cli-history" id="cli-history">
+                  <div class="cli-line banner">Welcome to RiddhimanOS Terminal v2.4 (x86_64-timber-cabin)</div>
+                  <div class="cli-line dim">Type <span class="cmd-highlight">help</span> to view available system commands.</div>
+                </div>
+                <div class="cli-input-row">
+                  <span class="cli-prompt">guest@cabin:~$</span>
+                  <input type="text" id="cli-input" class="cli-input" autocomplete="off" spellcheck="false" placeholder="type a command..." />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 2: Campfire Field Journal Modal -->
+    <div id="journal-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="journal-chassis">
+        <header class="journal-header">
+          <span class="journal-badge">CAMPFIRE LOG // 03</span>
+          <button class="modal-close-btn" data-close="journal-modal" aria-label="Close Journal">&times;</button>
+        </header>
+        <div class="journal-content">
+          <h2 class="journal-title">Engineering at the Frontier</h2>
+          <p class="journal-meta">Riddhiman Kundal &bull; 1st Year Engineering Student &bull; Thapar University</p>
+          
+          <div id="journal-entries-container">
+            <!-- Dynamically loaded from src/content.json -->
+          </div>
+
+          <div class="journal-footer">
+            <span class="journal-quote">&ldquo;Make it light. Make it local. Make it fast.&rdquo;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 3: Signal Tower Comms Console -->
+    <div id="contact-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="comms-chassis">
+        <header class="comms-header">
+          <div class="comms-status-pulse"></div>
+          <span class="comms-title">SIGNAL TRANSMISSION ARRAY // 142.850 MHz</span>
+          <button class="modal-close-btn" data-close="contact-modal" aria-label="Close Comms">&times;</button>
+        </header>
+
+        <div class="comms-body">
+          <p class="comms-sub">
+            Broadcasting from the mountain ridge. Open for engineering collaborations, AI systems development, and high-performance software inquiries.
+          </p>
+
+          <div class="channels-grid">
+            <!-- Dynamically loaded from src/content.json -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 4: Deep Dive 3D Project Inspector & Lightbox -->
+    <div id="project-inspector-modal" class="project-inspector-backdrop hidden" role="dialog" aria-modal="true">
+      <!-- Dynamically injected by projectShowcase.js -->
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

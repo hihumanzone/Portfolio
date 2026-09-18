@@ -1,0 +1,625 @@
+{
+  "meta": {
+    "siteTitle": "Riddhiman | Portfolio",
+    "preloader": {
+      "title": "ASCENDING MOUNTAIN SUMMIT...",
+      "subtitle": "Welcome, compiling low-poly world & shaders!"
+    },
+    "landscapeAlert": {
+      "heading": "LANDSCAPE MODE RECOMMENDED!",
+      "body": "This portfolio is designed for landscape viewing. Please rotate your device for the full workstation experience.",
+      "dismissText": "DISMISS"
+    }
+  },
+  "personal": {
+    "name": "RIDDHIMAN",
+    "tag": "@hihumanzone",
+    "role": "FULL-STACK + AI ENGINEER",
+    "institution": "1st Year Student • COE • Thapar University",
+    "statusMessage": "Broadcasting from the mountain ridge. Open for engineering collaborations, dance and creative software solutions."
+  },
+  "navigation": {
+    "hint": "Click waypoints, 3D objects, or move mouse to tilt cinematic camera! <3",
+    "waypoints": [
+      {
+        "id": 0,
+        "code": "01",
+        "name": "SUMMIT"
+      },
+      {
+        "id": 1,
+        "code": "02",
+        "name": "CABIN"
+      },
+      {
+        "id": 2,
+        "code": "03",
+        "name": "CAMPFIRE"
+      },
+      {
+        "id": 3,
+        "code": "04",
+        "name": "SIGNAL TOWER"
+      }
+    ],
+    "interactiveTargets": {
+      "cabin": {
+        "label": "ENTER CABIN WORKSPACE 🏚️"
+      },
+      "campfire": {
+        "label": "READ CAMPFIRE JOURNAL 📖"
+      },
+      "signalTower": {
+        "label": "OPEN SIGNAL TRANSMISSION 📡"
+      },
+      "defaultTooltip": "Click to inspect"
+    }
+  },
+  "workstation": {
+    "title": "RIDDHIMAN_OS // CABIN WORKSTATION <3",
+    "tabs": [
+      {
+        "id": "projects",
+        "label": "01_PROJECTS"
+      },
+      {
+        "id": "skills",
+        "label": "02_TECH_MATRIX"
+      },
+      {
+        "id": "cli",
+        "label": "03_INTERACTIVE_CLI"
+      }
+    ],
+    "projects": [
+      {
+        "id": "PRJ-01",
+        "name": "Gemini-Discord-Bot",
+        "badge": "★ 100+ Stars • 70+ Forks",
+        "summary": "Google Gemini Discord bot with multimodal understanding (text, images, videos, audio, PDFs, and office/code files), Gemini tools (Google Search, URL Context, Code Execution), and a lot of settings.",
+        "description": "Production-grade Discord AI bot with over 100 stars on GitHub. Leverages Gemini Flash to deliver streaming multimodal intelligence across Discord servers, with session memory management, Google Search grounding, Python code sandbox execution, and Nano Banana support.",
+        "tags": [
+          "Node.js",
+          "Discord.js",
+          "Gemini API",
+          "Multimodal AI",
+          "Streaming Tokens"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/Gemini-Discord-Bot/raw/main/Screenshots/tools/tools-code-execution-prompt-and-code.png",
+            "caption": "Gemini tools - code execution prompt and code"
+          },
+          {
+            "url": "https://github.com/hihumanzone/Gemini-Discord-Bot/raw/main/Screenshots/tools/tools-code-execution-generated-files.png",
+            "caption": "Gemini tools - code execution result"
+          },
+          {
+            "url": "https://github.com/hihumanzone/Gemini-Discord-Bot/raw/main/Screenshots/settings/settings-control-center.png",
+            "caption": "Settings menu - control center options"
+          }
+        ],
+        "architecture": [
+          "Clear rules: channel first, then server, then you",
+          "Safe memory: only new changes saved, no mix-ups",
+          "Live answers: stop button, auto retry, big replies as files",
+          "Same safety checks on every button",
+          "Clean start: right order every time, no double setup"
+        ],
+        "features": [
+          "Discord chat via mention, DM, auto-reply",
+          "Live answers with Stop, long answers as files",
+          "Separate chats: create, switch, clear, delete",
+          "Custom personalities for user, server, channel",
+          "Image / video / file / YouTube reading + Google search + file creation"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/Gemini-Discord-Bot.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/Gemini-Discord-Bot"
+        },
+        "stats": {
+          "stars": 101,
+          "forks": 72,
+          "language": "Node.js"
+        }
+      },
+      {
+        "id": "PRJ-03",
+        "name": "Gemini-Live-discord",
+        "badge": "★ 8 Stars • 4 Forks",
+        "summary": "Discord bot that joins a voice channel, streams user speech to Gemini Live, and plays Gemini's streaming audio replies back into the same channel",
+        "description": "Discord bot joins voice channels and streams audio bidirectionally with Gemini Live API. It decodes/mixes Discord Opus to 16kHz mono for Gemini and re-encodes 24kHz Gemini output to 48kHz stereo for Discord playback. Slash commands control per-guild sessions with auto-reconnect, VAD, and interruption handling.",
+        "tags": [
+          "Gemini Live API",
+          "WebSockets",
+          "Opus Audio",
+          "@discordjs/voice",
+          "VAD"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/Gemini-Live-discord/raw/main/connected.png",
+            "caption": "The Discord board being connected to a voice command."
+          }
+        ],
+        "architecture": [
+          "Modular audio / voice / bridge / gemini separation",
+          "CPer-guild isolated bridge sessions",
+          "Exponential-backoff reconnect with degraded mode",
+          "Validated env-driven tunable configuration"
+        ],
+        "features": [
+          "Live Discord-Gemini voice bridging",
+          "/join, /leave, /reset slash commands",
+          "Multi-user frame mixing with speaker labels",
+          "Local + server barge-in interruption"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/Gemini-Live-discord.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/Gemini-Live-discord"
+        },
+        "stats": {
+          "stars": 8,
+          "forks": 4,
+          "language": "Node.js"
+        }
+      },
+      {
+        "id": "PRJ-02",
+        "name": "opendroid_remote",
+        "badge": "ANDROID-REMOTE",
+        "summary": "Browser-only Android remote-control and gaming client via WebUSB ADB and scrcpy, no companion app, backend, or telemetry, all stays in browser",
+        "description": "It mirrors Android video/audio into a Chromium canvas and injects keyboard, mouse, touch, and clipboard input back. It pushes a verified scrcpy server over WebUSB ADB, decodes with WebCodecs/WebAudio, and layers visual game mapping with local profiles.",
+        "tags": [
+          "WebUSB API",
+          "WebCodecs",
+          "ADB Protocol",
+          "scrcpy Engine",
+          "TypeScript"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/opendroid_remote/raw/main/screenshots/game-mapping-overlays.png",
+            "caption": "Streaming Granny from an Android phone to a Chromebook, with full key mapping support"
+          },
+          {
+            "url": "https://github.com/hihumanzone/opendroid_remote/raw/main/screenshots/stream-settings-uhid-mouse.png",
+            "caption": "Streaming Minecraft from an Android phone to a Chromebook with native mouse input support"
+          }
+        ],
+        "architecture": [
+          "WebUSB ADB multi-device connect and auto-reconnect",
+          "Scrcpy H.264/H.265/AV1 video plus PCM/Opus/AAC/FLAC audio",
+          "Physical UHID mouse, touch, keyboard, clipboard control",
+          "Visual game mapping with joystick, swipe, mouse-look"
+        ],
+        "features": [
+          "Layered ADB / scrcpy / capabilities / input / UI separation",
+          "Serialized session lifecycle with codec fallback retries",
+          "Resolution-independent contain-fit coordinate transforms",
+          "Injectable mapping engine with isolated touch allocation",
+          "Local-first IndexedDB credential, profile, settings stores"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/opendroid_remote.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/opendroid_remote"
+        },
+        "stats": {
+          "stars": 1,
+          "forks": 0,
+          "language": "TypeScript"
+        }
+      },
+      {
+        "id": "PRJ-04",
+        "name": "HTML-previewer",
+        "badge": "LOCAL-FIRST TOOL",
+        "summary": "A streamlined, local-first frontend playground to build, organize, and preview full web projects directly in your browser.",
+        "description": "Browser-only workspace for creating and organizing HTML, CSS, JS, and media files with CodeMirror editing and file-tree management. Renders via virtual filesystem, asset-to-blob URL rewriting, and injected runtime shims inside a sandboxed iframe with modal, docked, and new-tab targets plus postMessage console capture.",
+        "tags": [
+          "Local-First",
+          "Zero-Telemetry",
+          "Vanilla JS",
+          "CodeSandbox",
+          "Privacy"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/HTML-previewer/raw/main/screenshots/docked-preview.png",
+            "caption": "Split-screen workflow allowing code editing while viewing real-time updates and logs alongside the editor."
+          },
+          {
+            "url": "https://github.com/hihumanzone/HTML-previewer/raw/main/screenshots/folder-tree-explorer.png",
+            "caption": "Manage complex multi-file projects with hierarchical directory structures, file operations, and batch actions."
+          },
+          {
+            "url": "https://github.com/hihumanzone/HTML-previewer/raw/main/screenshots/modal-preview-console.png",
+            "caption": "Full modal preview with an integrated developer console supporting log, info, warn, and error outputs with filtering."
+          }
+        ],
+        "architecture": [
+          "Modular single-responsibility class separation",
+          "Cached virtual-filesystem path resolution",
+          "Host-mirrored injected preview runtime shims",
+          "Tracked blob-URL lifecycle with error fallbacks"
+        ],
+        "features": [
+          "Multi-file/folder workspace with CodeMirror editors",
+          "Live sandboxed preview in modal/docked/new-tab",
+          "Built-in console with filtering and counts",
+          "ZIP/folder/file import and ZIP export",
+          "Persistent customizable editor settings and shortcuts"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/HTML-previewer.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/HTML-previewer"
+        },
+        "stats": {
+          "stars": 0,
+          "forks": 0,
+          "language": "JavaScript"
+        }
+      },
+      {
+        "id": "PRJ-05",
+        "name": "yt-mobile-enhanced",
+        "badge": "MEDIA-ENHANCEMENT",
+        "summary": "A Manifest V3 Chrome extension that brings YouTube's mobile experience to desktop, with desktop-friendly playback controls, background playback support, and feed/watch-page layout fixes.",
+        "description": "Forces mobile YouTube via declarativeNetRequest UA spoof and class-gated CSS layouts. Adds MAIN-world visibility/IntersectionObserver/fullscreen patches plus isolated-world player, feed, and preview modules.",
+        "tags": [
+          "YouTube",
+          "Mobile",
+          "Desktop",
+          "Chrome Extension",
+          "Keyboard controls"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/yt-mobile-enhanced/raw/main/screenshots/popup-menu.png",
+            "caption": "Extension Popup & Shortcuts"
+          },
+          {
+            "url": "https://github.com/hihumanzone/yt-mobile-enhanced/raw/main/screenshots/home-feed-preview.png",
+            "caption": "Mobile Home Feed & Hover Video Preview"
+          }
+        ],
+        "architecture": [
+          "Isolated-world vs MAIN-world split",
+          "Central YTME config/state namespace",
+          "Storage-synced feature flags with dependencies",
+          "Cached VideoCache/AudioEngine singletons",
+          "SPA-aware observers + IO widening nudges"
+        ],
+        "features": [
+          "Mobile UA forcing + desktop mobile layout",
+          "Background playback visibility spoofing",
+          "Keyboard controls + 300% WebAudio volume boost",
+          "Hover thumbnail iframe previews"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/yt-mobile-enhanced.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/yt-mobile-enhanced"
+        },
+        "stats": {
+          "stars": 0,
+          "forks": 0,
+          "language": "JavaScript"
+        }
+      },
+      {
+        "id": "PRJ-06",
+        "name": "home-new-tab",
+        "badge": "BROWSER-NEW-TAB",
+        "summary": "Chrome MV3 new-tab dashboard for bookmarks and notes",
+        "description": "A lightweight, fast, and modern dark-themed dashboard for your browser. This extension replaces the default new tab page with an elegant interface featuring an unobtrusive clock and date, browser bookmarks integration, and persistent multi-tab notes.",
+        "tags": [
+          "Reasoning LLM",
+          "Chain-of-Thought",
+          "Gemini Thinking",
+          "Logic Verification",
+          "Python"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/home-new-tab/raw/main/screenshots/screenshot.png",
+            "caption": "New Tab Dashboard with bookmarks and notes"
+          }
+        ],
+        "architecture": [
+          "Modular ES-module separation of concerns",
+          "Centralized config for tunables and limits",
+          "Dual storage with automatic migration fallback",
+          "XSS-safe pure rendering layer"
+        ],
+        "features": [
+          "Live clock, date, time-based greeting",
+          "Bookmark grid with folder navigation and breadcrumbs",
+          "Multi-source cached favicon resolution",
+          "Tabbed autosaving notes with drag reorder",
+          "Notes JSON export/import with undo restore"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/home-new-tab.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/home-new-tab"
+        },
+        "stats": {
+          "stars": 0,
+          "forks": 0,
+          "language": "JavaScript"
+        }
+      },
+      {
+        "id": "PRJ-07",
+        "name": "Markdown",
+        "badge": "MARKDOWN-RENDERER",
+        "summary": "Browser-based Markdown editor rendering to styled HTML via Marked, KaTeX, and Prism. Uses iframe srcdoc preview builder, library/history.",
+        "description": "A powerful, client-side web application for rendering Markdown documents with full LaTeX math support. This tool provides a clean, intuitive interface for writing, editing, and rendering Markdown content with mathematical expressions.",
+        "tags": [
+          "Markdown Renderer",
+          "LaTeX & KaTeX",
+          "Syntax Highlighting",
+          "Local Storage Library",
+          "Zero Backend"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/Markdown/raw/main/screenshots/01-editor-input-dark.png",
+            "caption": "Home Page - Editor Input (Dark Theme)"
+          },
+          {
+            "url": "https://github.com/hihumanzone/Markdown/raw/main/screenshots/03-rendered-output.png",
+            "caption": "Rendered Output - Markdown and LaTeX"
+          },
+          {
+            "url": "https://github.com/hihumanzone/Markdown/raw/main/screenshots/04-code-syntax-highlighting.png",
+            "caption": "Rendered Output - Code Syntax Highlighting"
+          }
+        ],
+        "architecture": [
+          "Modular single-purpose manager classes",
+          "Centralized CONFIG constants",
+          "Math preserve-restore pipeline",
+          "Isolated iframe page builder"
+        ],
+        "features": [
+          "Markdown + KaTeX math preview",
+          "Prism highlighting with copy buttons",
+          "Foldered library with color labels",
+          "PDF, PNG, Markdown export",
+          "History, autosave, theme toggle"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/Markdown.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/Markdown"
+        },
+        "stats": {
+          "stars": 0,
+          "forks": 0,
+          "language": "HTML / CSS / JS"
+        }
+      },
+      {
+        "id": "PRJ-08",
+        "name": "industrial-lyrics",
+        "badge": "CREATIVE-MEDIA-TOOL",
+        "summary": "A client-side 3D industrial/neon-themed synchronized lyrics visualizer that renders LRC lyrics as animated steel panels with glowing neon text synced to audio playback.",
+        "description": "Users drag-and-drop an audio file and an LRC lyrics file, and the app renders each lyric line as a rusted steel plate with flickering neon text, mechanical armatures, sparks, and atmospheric dust — all in WebGL via Three.js. It supports word-level timing, procedural PBR textures, and exports to MP4/WebM video.",
+        "tags": [
+          "Three.js",
+          "WebGL",
+          "Lyrics Sync",
+          "LRC Enhanced",
+          "Video Export"
+        ],
+        "screenshots": [
+          {
+            "url": "https://github.com/hihumanzone/industrial-lyrics/raw/main/screenshots/lyrics-scene.png",
+            "caption": "Each lyric line is rendered on a textured 3D panel that lights up in sync with the audio."
+          },
+          {
+            "url": "https://github.com/hihumanzone/industrial-lyrics/raw/main/screenshots/visual-configurator.png",
+            "caption": "The Visual Configurator lets you set a custom background image and fine-tune its darkness and blur."
+          },
+          {
+            "url": "https://github.com/hihumanzone/industrial-lyrics/raw/main/screenshots/export-dialog.png",
+            "caption": "The export dialog renders the synchronized 3D scene and audio directly to a video file at 30 or 60 FPS, up to 1080p."
+          }
+        ],
+        "architecture": [
+          "Clean 4-layer separation: domain lib (zero deps), types, Three.js scene, DOM UI",
+          "Pervasive memory optimization: object pooling, scratch vectors, geometry caching, disposal chains",
+          "Strict TypeScript with comprehensive type safety",
+          "Procedural texture generation eliminates external asset dependencies"
+        ],
+        "features": [
+          "Dual-mesh neon word rendering with 4-state glow machine",
+          "Procedural rust/crack PBR textures (no external texture assets)",
+          "WebCodecs MP4 + MediaRecorder WebM dual export pipeline",
+          "Binary-search O(log n) lyric sync engine with interpolated audio time",
+          "Instrumental pause panels with filling progress tube and bubble particles"
+        ],
+        "cloneUrl": "git clone https://github.com/hihumanzone/industrial-lyrics.git",
+        "link": {
+          "label": "View Repository",
+          "url": "https://github.com/hihumanzone/industrial-lyrics"
+        },
+        "stats": {
+          "stars": 0,
+          "forks": 0,
+          "language": "Three.js / TypeScript"
+        }
+      }
+    ],
+    "skills": [
+      {
+        "category": "// PROGRAMMING LANGUAGES",
+        "items": [
+          {
+            "name": "HTML/CSS/JavaScript"
+          },
+          {
+            "name": "TypeScript"
+          },
+          {
+            "name": "Python"
+          },
+          {
+            "name": "Node.js"
+          },
+          {
+            "name": "C/C++/C#"
+          },
+          {
+            "name": "Java"
+          }
+        ]
+      },
+      {
+        "category": "// HOW I DO STUFF",
+        "items": [
+          {
+            "name": "Efficient, Optimized, Lightweight"
+          },
+          {
+            "name": "AI Integration, Detection, Custom"
+          },
+          {
+            "name": "User-friendly, Customizable, Modern"
+          },
+          {
+            "name": "Portable, Cross-platform, Local"
+          },
+          {
+            "name": "Production-ready, Secure, Stable"
+          }
+        ]
+      },
+      {
+        "category": "// USES",
+        "items": [
+          {
+            "name": "Zed Code Editor"
+          },
+          {
+            "name": "Google Antigravity"
+          },
+          {
+            "name": "Helium Browser"
+          },
+          {
+            "name": "Linux / Windows"
+          },
+          {
+            "name": "RTX 5070"
+          }
+        ]
+      },
+      {
+        "category": "// LEARNING",
+        "items": [
+          {
+            "name": "React / Material UI / Flutter",
+            "type": "highlight"
+          },
+          {
+            "name": "Frontend Design",
+            "type": "highlight"
+          },
+          {
+            "name": "Cybersecurity",
+            "type": "highlight"
+          },
+          {
+            "name": "Docker",
+            "type": "highlight"
+          },
+          {
+            "name": "Social Skills",
+            "type": "learning"
+          },
+          {
+            "name": "Time Management",
+            "type": "learning"
+          }
+        ]
+      }
+    ],
+    "cli": {
+      "banner": "Welcome to RiddhimanOS Terminal (timber-cabin)",
+      "hint": "Type <span class=\"cmd-highlight\">help</span> to view available system commands.",
+      "prompt": "guest@cabin:~$",
+      "whoami": "guest@riddhiman-cabin (visitor | read-only terminal access) </3"
+    }
+  },
+  "journal": {
+    "badge": "CAMPFIRE LOG // 03",
+    "title": "Still Learning to Be an Engineer",
+    "meta": "Riddhiman Kundal &bull; 1st Year Student &bull; COE &bull; Thapar University",
+    "entries": [
+      {
+        "title": "OHH.. WHOOoo Is HEE ?!",
+        "content": "I'm riddhiman, someone interested in thinking creatively and finding solid solutions to real world problems, and building tools that make people's lives better. I started back in 2018, writing HTML code on my phone's notes app. Since then, I've learned a lot, and I'm still learning. What began as a personal interest has grown into a journey toward making it my profession."
+      },
+      {
+        "title": "What more have I done?",
+        "content": "I don't upload everything to GitHub. I've also built Android apps (a birthday reminder and a markdown viewer), a Windows app (a simple, well optimized tool, around 650 lines of code, that remaps my laptop's Copilot key to do something else, it's fully customizable), a YOLO based computer vision AI model that detects pipe leakage from a live camera feed, and a cute, complete 3D multiplayer birthday racing game. I've even run AI locally, on my phone, using Ollama, entirely offline."
+      },
+      {
+        "title": "Life Right Now :'<",
+        "content": "It's hard right now. Stressful. Seriously. I've never seen this many people at once, and there's a lot of work. I'm an introvert, and all of this is so overwhelming. I'm not able to do anything properly. My studies aren't going well at all, and I really hope I adapt and do better. I'm not getting time for anything, and I'm really not used to this. But I'm trying. I hope it works out."
+      }
+    ],
+    "quote": "“Make it efficient. Make it stable. Make it natural.”"
+  },
+  "contact": {
+    "title": "SIGNAL TRANSMISSION ARRAY // 143.224 MHz",
+    "subtitle": "Broadcasting from the mountain ridge. Open for engineering collaborations, dance and creative software solutions.",
+    "channels": [
+      {
+        "id": "email",
+        "icon": "📫",
+        "label": "DIRECT DISPATCH",
+        "value": "riddhiman2372007@gmail.com",
+        "url": "mailto:riddhiman2372007@gmail.com",
+        "actionType": "copy_and_send",
+        "actionLabel": "Send ↗"
+      },
+      {
+        "id": "github",
+        "icon": "🐙",
+        "label": "SOURCE REPOSITORIES",
+        "value": "github.com/hihumanzone",
+        "url": "https://github.com/hihumanzone",
+        "actionType": "link",
+        "actionLabel": "Visit ↗"
+      },
+      {
+        "id": "linkedin",
+        "icon": "💼",
+        "label": "PROFESSIONAL NETWORK",
+        "value": "Riddhiman Kundal (LinkedIn)",
+        "url": "https://www.linkedin.com/in/riddhiman-kundal-5470963b2/",
+        "actionType": "link",
+        "actionLabel": "Connect ↗"
+      }
+    ]
+  },
+  "audio": {
+    "mutedLabel": "AUDIO: MUTED",
+    "playingLabel": "AUDIO: PLAYING",
+    "mixerTitle": "AMBIENT MIXER // LAYER BALANCE",
+    "layers": {
+      "wind": "WIND",
+      "river": "RIVER",
+      "fire": "FIRE",
+      "cricket": "CRICKETS"
+    }
+  }
+}
