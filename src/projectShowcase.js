@@ -1018,7 +1018,7 @@ export class ProjectShowcase {
         ? proj.tags.map(tag => `<span class="tag">${tag}</span>`).join('')
         : '';
 
-      const screenshotUrl = this.resolveTextureUrl(proj.screenshots?.[0]?.url) || '/projects/gemini-discord-bot-1.svg';
+      const screenshotUrl = this.resolveTextureUrl(proj.screenshots?.[0]?.url) || '';
 
       card.innerHTML = `
         <!-- Specular 3D Reflection Glare Overlay -->
@@ -1026,7 +1026,7 @@ export class ProjectShowcase {
 
         <!-- Screenshot Header Banner with CRT Scanlines -->
         <div class="card-screenshot-banner">
-          <img src="${screenshotUrl}" alt="${proj.name} Interface Screenshot" loading="lazy" class="card-img" />
+          ${screenshotUrl ? `<img src="${screenshotUrl}" alt="${proj.name} Interface Screenshot" loading="lazy" class="card-img" />` : `<div class="card-img-placeholder">NO VISUAL TELEMETRY</div>`}
           <div class="card-scanlines" aria-hidden="true"></div>
           <button class="quick-inspect-trigger" aria-label="Inspect project">⛶ INSPECT</button>
         </div>
@@ -1131,9 +1131,7 @@ export class ProjectShowcase {
     if (!this.inspectorModal || !project) return;
     this.currentInspectorProject = project;
 
-    const screenshots = (project.screenshots || [
-      { url: '/projects/gemini-discord-bot-1.svg', caption: 'Application Interface' }
-    ]).map(s => ({ ...s, url: this.resolveTextureUrl(s.url) }));
+    const screenshots = (project.screenshots || []).map(s => ({ ...s, url: this.resolveTextureUrl(s.url) }));
 
     const topBadgeClass = project.badge?.includes('★') ? 'project-stars' : 'project-badge';
 
