@@ -86,9 +86,14 @@ class AmbientSoundscape {
     this.limiter.connect(this.ctx.destination);
 
     // 2. Master Gain Node (handles mute/unmute and volume slider scaling)
+    // NOTE: assigned directly via `.value` (not setValueAtTime) so the
+    // silence-at-birth level can't be wiped by a cancelScheduledValues(t)
+    // in the same render quantum (e.g. toggle() right after ensureContext),
+    // which would otherwise fall back to the default gain of 1.0 and blast
+    // at 100% before ramping down to the slider level.
     this.masterGain = this.ctx.createGain();
     const initialGain = this.isPlaying ? this.volume : 0.0;
-    this.masterGain.gain.setValueAtTime(initialGain, this.ctx.currentTime);
+    this.masterGain.gain.value = initialGain;
     this.masterGain.connect(this.limiter);
 
     // 3. Ambient Sub-mix Bus
@@ -196,8 +201,10 @@ class AmbientSoundscape {
     lfo2.start();
 
     // Wind master layer gain - gentle ambient level sitting softly behind campfire and river
+    // Direct `.value` assignment: immune to the cancelScheduledValues(t) in
+    // setWaypointMix() running in the same quantum (see masterGain note).
     this.windGain = this.ctx.createGain();
-    this.windGain.gain.setValueAtTime(0.26, this.ctx.currentTime);
+    this.windGain.gain.value = 0.26;
 
     const windSource = this.ctx.createBufferSource();
     windSource.buffer = noiseBuffer;
@@ -269,7 +276,7 @@ class AmbientSoundscape {
     flowLfo.start();
 
     this.riverGain = this.ctx.createGain();
-    this.riverGain.gain.setValueAtTime(0.46, this.ctx.currentTime);
+    this.riverGain.gain.value = 0.46;
 
     riverSource.connect(bodyFilter);
     riverSource.connect(splashFilter);
@@ -293,7 +300,7 @@ class AmbientSoundscape {
 
     if (!this.fireGain) {
       this.fireGain = this.ctx.createGain();
-      this.fireGain.gain.setValueAtTime(0.65, this.ctx.currentTime);
+      this.fireGain.gain.value = 0.65;
       this.fireGain.connect(this.ambientBus);
     }
 
@@ -461,7 +468,7 @@ class AmbientSoundscape {
 
     if (!this.cricketGain) {
       this.cricketGain = this.ctx.createGain();
-      this.cricketGain.gain.setValueAtTime(0.42, this.ctx.currentTime);
+      this.cricketGain.gain.value = 0.42;
       this.cricketGain.connect(this.ambientBus);
     }
 
@@ -556,6 +563,7 @@ class AmbientSoundscape {
     if (this.ctx && this.masterGain && this.isPlaying) {
       const t = this.ctx.currentTime;
       this.masterGain.gain.cancelScheduledValues(t);
+      this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, t);
       this.masterGain.gain.linearRampToValueAtTime(this.volume, t + 0.08);
     }
 
@@ -641,6 +649,7 @@ class AmbientSoundscape {
     const t = this.ctx.currentTime;
 
     this.masterGain.gain.cancelScheduledValues(t);
+    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, t);
     this.masterGain.gain.linearRampToValueAtTime(target, t + 0.8);
 
     if (this.isPlaying) {
