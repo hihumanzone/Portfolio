@@ -1120,6 +1120,7 @@ class RetroWorkspaceApp {
     const docEl = document.documentElement;
     const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
     if (isFs) {
+      this.tryOrientationUnlock();
       const exit = document.exitFullscreen
         ? document.exitFullscreen()
         : (document.webkitExitFullscreen ? document.webkitExitFullscreen() : null);
@@ -1129,8 +1130,39 @@ class RetroWorkspaceApp {
       const request = docEl.requestFullscreen
         ? docEl.requestFullscreen()
         : docEl.webkitRequestFullscreen();
-      if (request && typeof request.catch === 'function') request.catch(() => {});
+      if (request && typeof request.then === 'function') {
+        // Screen Orientation API requires fullscreen first: lock once entered.
+        request.then(() => this.tryLandscapeLock()).catch(() => {});
+      } else {
+        // Older WebKit without a promise: best-effort immediate lock attempt.
+        this.tryLandscapeLock();
+      }
     }
+  }
+
+  isMobileDevice() {
+    try {
+      if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
+    } catch { /* ignore */ }
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+  }
+
+  tryLandscapeLock() {
+    try {
+      if (!this.isMobileDevice()) return;
+      const orientation = screen?.orientation;
+      if (!orientation || typeof orientation.lock !== 'function') return;
+      const locked = orientation.lock('landscape');
+      if (locked && typeof locked.catch === 'function') locked.catch(() => {});
+    } catch { /* Orientation lock unsupported — stay in current orientation */ }
+  }
+
+  tryOrientationUnlock() {
+    try {
+      const orientation = screen?.orientation;
+      if (!orientation || typeof orientation.unlock !== 'function') return;
+      orientation.unlock();
+    } catch { /* ignore */ }
   }
 
   pressFsAndToggle() {
@@ -1264,6 +1296,8 @@ class RetroWorkspaceApp {
 
     const syncFsIcon = () => {
       const active = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      // Esc-key / system-gesture exits bypass toggleFullscreen(): release the lock here.
+      if (!active) this.tryOrientationUnlock();
       if (this.fsIconMat) {
         const tex = active ? this.fsCompressTex : this.fsExpandTex;
         if (this.fsIconMat.map !== tex) {
